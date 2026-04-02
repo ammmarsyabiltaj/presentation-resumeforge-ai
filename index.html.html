@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResumeForgeAI × MyNext — Pitch Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* === RESET & BASE === */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #141414;
+  --surface: #1e1e1e;
+  --surface-hi: #252525;
+  --yellow: #FFD700;
+  --yellow-soft: #F5C518;
+  --teal: #00B4D8;
+  --white: #FFFFFF;
+  --muted: #BBBBBB;
+  --dim: #888888;
+  --divider: #333333;
+  --green: #4EC96B;
+  --red: #E74C3C;
+
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-body: 'Outfit', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+html { scroll-behavior: smooth; scroll-snap-type: y mandatory; overflow-y: scroll; overflow-x: hidden; }
+body { background: var(--bg); color: var(--white); font-family: var(--font-body); }
+
+/* === VIEWPORT BASE (MANDATORY) === */
+.slide {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  scroll-snap-align: start;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(1.5rem, 4vw, 4rem);
+}
+
+/* === DECORATIVE ELEMENTS === */
+.deco-circle {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--surface);
+  pointer-events: none;
+  z-index: 0;
+}
+.deco-circle.tr { top: -15vh; right: -10vw; width: clamp(300px, 50vw, 700px); height: clamp(300px, 50vw, 700px); }
+.deco-circle.bl { bottom: -15vh; left: -10vw; width: clamp(250px, 40vw, 550px); height: clamp(250px, 40vw, 550px); }
+.deco-circle.center { top: 10vh; left: 30vw; width: clamp(400px, 55vw, 800px); height: clamp(400px, 55vw, 800px); opacity: 0.5; }
+
+.slide-content { position: relative; z-index: 1; width: 100%; max-width: 1200px; margin: 0 auto; }
+
+/* === TYPOGRAPHY === */
+.display-xl {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 7vw, 5.5rem);
+  line-height: 0.95;
+  letter-spacing: 0.04em;
+  color: var(--white);
+}
+.display-lg {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 0.95;
+  letter-spacing: 0.04em;
+}
+.display-md {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3.5vw, 2.8rem);
+  line-height: 1;
+  letter-spacing: 0.03em;
+}
+.section-num {
+  font-family: var(--font-display);
+  font-size: clamp(4rem, 10vw, 8rem);
+  color: var(--yellow);
+  line-height: 0.9;
+  opacity: 0.9;
+}
+.body-text {
+  font-family: var(--font-body);
+  font-size: clamp(0.85rem, 1.3vw, 1.05rem);
+  line-height: 1.6;
+  color: var(--muted);
+  font-weight: 300;
+}
+.label {
+  font-family: var(--font-body);
+  font-size: clamp(0.6rem, 0.8vw, 0.75rem);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--yellow);
+  font-weight: 600;
+}
+.accent { color: var(--yellow); }
+.teal { color: var(--teal); }
+
+/* === YELLOW ACCENT BAR === */
+.yellow-bar { width: 60px; height: 4px; background: var(--yellow); margin-bottom: clamp(0.8rem, 1.5vw, 1.5rem); }
+
+/* === CARDS === */
+.card {
+  background: var(--surface);
+  border-radius: 8px;
+  padding: clamp(1rem, 2vw, 1.8rem);
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--yellow);
+}
+.card-title {
+  font-family: var(--font-body);
+  font-size: clamp(0.7rem, 1vw, 0.85rem);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: clamp(0.3rem, 0.6vw, 0.6rem);
+}
+.card-body {
+  font-size: clamp(0.65rem, 0.9vw, 0.8rem);
+  color: var(--muted);
+  line-height: 1.5;
+  font-weight: 300;
+}
+
+/* === GRID LAYOUTS === */
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(0.5rem, 1vw, 1rem); }
+.grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: clamp(0.4rem, 0.8vw, 0.8rem); }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1rem, 2vw, 2rem); align-items: center; }
+
+/* === STAT BLOCKS === */
+.stat-card {
+  background: var(--surface);
+  border-radius: 8px;
+  padding: clamp(0.6rem, 1.2vw, 1.2rem);
+  text-align: right;
+}
+.stat-value {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4.5vw, 3.5rem);
+  color: var(--white);
+  line-height: 1;
+}
+.stat-label {
+  font-size: clamp(0.5rem, 0.7vw, 0.65rem);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--yellow);
+  margin-top: clamp(0.2rem, 0.4vw, 0.4rem);
+}
+
+/* === TABLE === */
+.comp-table { width: 100%; border-collapse: separate; border-spacing: 2px; font-size: clamp(0.55rem, 0.85vw, 0.75rem); }
+.comp-table th {
+  background: var(--teal);
+  color: var(--white);
+  padding: clamp(0.35rem, 0.7vw, 0.7rem) clamp(0.3rem, 0.5vw, 0.5rem);
+  text-align: center;
+  font-weight: 700;
+  font-size: clamp(0.55rem, 0.8vw, 0.7rem);
+}
+.comp-table th:first-child { text-align: left; }
+.comp-table td {
+  padding: clamp(0.25rem, 0.5vw, 0.5rem) clamp(0.3rem, 0.5vw, 0.5rem);
+  text-align: center;
+  background: var(--surface);
+}
+.comp-table tr:nth-child(even) td { background: var(--surface-hi); }
+.comp-table td:first-child { text-align: left; font-weight: 600; color: var(--white); }
+.comp-table .check { color: var(--green); font-weight: 700; }
+.comp-table .cross { color: var(--red); }
+.comp-table .price-row td, .comp-table .price-row th {
+  background: var(--teal);
+  color: var(--white);
+  font-weight: 700;
+  padding: clamp(0.35rem, 0.7vw, 0.7rem) clamp(0.3rem, 0.5vw, 0.5rem);
+}
+.comp-table .price-row .highlight { color: var(--yellow); }
+
+/* === TOC === */
+.toc-item {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 1vw, 1rem);
+  padding: clamp(0.4rem, 0.8vw, 0.8rem) 0;
+  border-bottom: 1px solid var(--divider);
+}
+.toc-item:last-child { border-bottom: none; }
+.toc-num {
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 1.8vw, 1.6rem);
+  color: var(--yellow);
+  min-width: 2em;
+}
+.toc-text {
+  font-family: var(--font-body);
+  font-size: clamp(0.75rem, 1.2vw, 1rem);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+}
+
+/* === INTEGRATION OPTIONS === */
+.int-option {
+  background: var(--surface);
+  border-radius: 8px;
+  padding: clamp(0.5rem, 1vw, 1rem) clamp(0.8rem, 1.5vw, 1.5rem);
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 1vw, 1rem);
+  margin-bottom: clamp(0.3rem, 0.6vw, 0.6rem);
+}
+.int-num {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.5vw, 2.2rem);
+  min-width: 2em;
+}
+.int-badge {
+  background: var(--yellow);
+  color: var(--bg);
+  font-size: clamp(0.5rem, 0.6vw, 0.55rem);
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.int-ttl {
+  font-family: var(--font-display);
+  font-size: clamp(0.9rem, 1.3vw, 1.1rem);
+  margin-left: auto;
+}
+
+/* === PRICING CARDS === */
+.price-card {
+  background: var(--surface);
+  border-radius: 8px;
+  padding: clamp(0.8rem, 1.5vw, 1.5rem);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.price-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: var(--yellow);
+}
+.price-name {
+  font-family: var(--font-body);
+  font-size: clamp(0.6rem, 0.85vw, 0.75rem);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 700;
+  margin-bottom: clamp(0.5rem, 1vw, 1rem);
+}
+.price-amount {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  color: var(--yellow);
+  line-height: 1;
+}
+.price-per {
+  font-size: clamp(0.5rem, 0.65vw, 0.6rem);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+  margin-bottom: clamp(0.4rem, 0.8vw, 0.8rem);
+}
+.price-total {
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 1.5vw, 1.3rem);
+  color: var(--teal);
+  margin-bottom: clamp(0.3rem, 0.6vw, 0.6rem);
+}
+.price-users {
+  font-size: clamp(0.6rem, 0.8vw, 0.7rem);
+  color: var(--white);
+  font-weight: 600;
+  margin-bottom: clamp(0.3rem, 0.5vw, 0.5rem);
+}
+.price-desc {
+  font-size: clamp(0.55rem, 0.75vw, 0.65rem);
+  color: var(--muted);
+  line-height: 1.5;
+  border-top: 1px solid var(--divider);
+  padding-top: clamp(0.3rem, 0.6vw, 0.6rem);
+  margin-top: auto;
+}
+
+/* === ROADMAP === */
+.road-card {
+  background: var(--surface);
+  border-radius: 8px;
+  padding: clamp(0.6rem, 1.2vw, 1.2rem);
+  position: relative;
+  overflow: hidden;
+}
+.road-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--yellow);
+}
+.road-num {
+  font-family: var(--font-display);
+  font-size: clamp(1.3rem, 2.2vw, 1.8rem);
+  color: var(--yellow);
+  line-height: 1;
+}
+.road-name {
+  font-family: var(--font-body);
+  font-size: clamp(0.6rem, 0.85vw, 0.75rem);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  margin: clamp(0.2rem, 0.4vw, 0.4rem) 0;
+}
+.road-time {
+  font-size: clamp(0.6rem, 0.8vw, 0.7rem);
+  color: var(--teal);
+  font-weight: 600;
+  margin-bottom: clamp(0.3rem, 0.5vw, 0.5rem);
+}
+.road-details {
+  font-size: clamp(0.55rem, 0.75vw, 0.65rem);
+  color: var(--muted);
+  line-height: 1.5;
+  border-top: 1px solid var(--divider);
+  padding-top: clamp(0.3rem, 0.5vw, 0.5rem);
+}
+
+/* === ANIMATIONS === */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+.reveal-delay-5 { transition-delay: 0.5s; }
+.reveal-delay-6 { transition-delay: 0.6s; }
+.reveal-delay-7 { transition-delay: 0.7s; }
+.reveal-delay-8 { transition-delay: 0.8s; }
+
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-40px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal-left.visible { opacity: 1; transform: translateX(0); }
+
+.reveal-right {
+  opacity: 0;
+  transform: translateX(40px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal-right.visible { opacity: 1; transform: translateX(0); }
+
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal-scale.visible { opacity: 1; transform: scale(1); }
+
+/* === NAV DOTS === */
+.nav-dots {
+  position: fixed;
+  right: clamp(0.5rem, 1vw, 1rem);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.nav-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--divider);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+.nav-dot.active {
+  background: var(--yellow);
+  transform: scale(1.3);
+}
+.nav-dot:hover { background: var(--muted); }
+
+/* === SLIDE COUNTER === */
+.slide-counter {
+  position: fixed;
+  bottom: clamp(0.5rem, 1vw, 1rem);
+  right: clamp(0.5rem, 1.5vw, 1.5rem);
+  font-family: var(--font-mono);
+  font-size: clamp(0.6rem, 0.8vw, 0.75rem);
+  color: var(--dim);
+  z-index: 100;
+}
+
+/* === REDUCED MOTION === */
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .reveal-left, .reveal-right, .reveal-scale {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* === HEIGHT BREAKPOINTS === */
+@media (max-height: 700px) {
+  .display-xl { font-size: clamp(2rem, 5vw, 3.5rem); }
+  .card { padding: clamp(0.6rem, 1vw, 1rem); }
+  .grid-4 { gap: clamp(0.3rem, 0.6vw, 0.5rem); }
+}
+@media (max-height: 600px) {
+  .display-xl { font-size: clamp(1.8rem, 4vw, 3rem); }
+  .section-num { font-size: clamp(2.5rem, 6vw, 4rem); }
+}
+@media (max-height: 500px) {
+  .slide { padding: clamp(0.8rem, 2vw, 2rem); }
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .grid-5 { grid-template-columns: repeat(2, 1fr); }
+  .grid-2 { grid-template-columns: 1fr; }
+  .nav-dots { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- === NAV DOTS === -->
+<nav class="nav-dots" id="navDots"></nav>
+<div class="slide-counter" id="slideCounter"></div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 1: HERO -->
+<!-- ============================================================ -->
+<section class="slide" id="slide-1">
+  <div class="deco-circle tr"></div>
+  <div class="deco-circle bl"></div>
+  <div class="slide-content">
+    <div class="reveal" style="margin-bottom: clamp(0.5rem, 1vw, 1rem);">
+      <div class="label" style="margin-bottom: clamp(0.5rem, 1vw, 1rem);">Commercial Proposal — April 2026</div>
+    </div>
+    <h1 class="display-xl reveal reveal-delay-1">RESUMEFORGEAI<br><span class="accent">× MYNEXT</span></h1>
+    <p class="body-text reveal reveal-delay-2" style="max-width: 550px; margin-top: clamp(0.8rem, 1.5vw, 1.5rem);">
+      AI-powered resume tailoring embedded within TalentCorp's MyNext platform — helping Malaysian graduates convert applications into interviews.
+    </p>
+    <div style="display: flex; gap: clamp(0.5rem, 1vw, 1rem); margin-top: clamp(1.5rem, 3vw, 2.5rem); flex-wrap: wrap;">
+      <div class="card reveal reveal-delay-3" style="flex: 1; min-width: 200px;">
+        <div class="card-title">AI-Powered Tailoring</div>
+        <div class="card-body">Per-JD resume customisation</div>
+      </div>
+      <div class="card reveal reveal-delay-4" style="flex: 1; min-width: 200px;">
+        <div class="card-title">Embedded in MyNext</div>
+        <div class="card-body">Zero friction for graduates</div>
+      </div>
+      <div class="card reveal reveal-delay-5" style="flex: 1; min-width: 200px;">
+        <div class="card-title">10× Cheaper</div>
+        <div class="card-body">Than global competitors</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 2: TABLE OF CONTENTS -->
+<!-- ============================================================ -->
+<section class="slide" id="slide-2">
+  <div class="deco-circle tr" style="opacity: 0.5;"></div>
+  <div class="slide-content">
+    <div class="grid-2">
+      <div>
+        <div class="toc-item reveal"><span class="toc-num">01</span><span class="toc-text">Problem Statement</span></div>
+        <div class="toc-item reveal reveal-delay-1"><span class="toc-num">02</span><span class="toc-text">Market Data & Scale</span></div>
+        <div class="toc-item reveal reveal-delay-2"><span class="toc-num">03</span><span class="toc-text">Competitive Landscape</span></div>
+        <div class="toc-item reveal reveal-delay-3"><span class="toc-num">04</span><span class="toc-text">Solution Overview</span></div>
+        <div class="toc-item reveal reveal-delay-4"><span class="toc-num">05</span><span class="toc-text">Integration Options</span></div>
+        <div class="toc-item reveal reveal-delay-5"><span class="toc-num">06</span><span class="toc-text">Pricing Model</span></div>
+        <div class="toc-item reveal reveal-delay-6"><span class="toc-num">07</span><span class="toc-text">Implementation Roadmap</span></div>
+        <div class="toc-item reveal reveal-delay-7"><span class="toc-num">08</span><span class="toc-text">Impact & Value</span></div>
+      </div>
+      <div class="reveal reveal-delay-2" style="text-align: right;">
+        <div class="display-lg" style="color: var(--white);">TABLE OF<br>CONTENT</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 3: SECTION DIVIDER — The Problem -->
+<!-- ============================================================ -->
+<section class="slide" id="slide-3">
+  <div class="deco-circle center"></div>
+  <div class="slide-content">
+    <div class="section-num reveal">01</div>
+    <h2 class="display-lg reveal reveal-delay-1" style="margin-top: clamp(0.5rem, 1vw, 1rem);">THE PROBLEM</h2>
+    <p class="body-text reveal reveal-delay-2" style="margin-top: clamp(0.5rem, 1vw, 1rem); max-width: 600px;">
+      Malaysia's graduate employability gap is structural, not cyclical.
+    </p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 4: STATS — Market Scale -->
+<!-- ============================================================ -->
+<section class="slide" id="slide-4">
+  <div class="deco-circle tr"></div>
+  <div class="slide-content">
+    <div class="grid-2">
+      <div>
+        <div class="display-lg reveal" style="color: var(--white);">5.98 MILLION<br>GRADUATES.<br><span class="accent">PERSISTENT GAP.</span></div>
+        <p class="body-text reveal reveal-delay-1" style="margin-top: clamp(0.8rem, 1.5vw, 1.5rem);">
+          Despite 86% labour force participation and improving headline unemployment (3.2% in 2024), structural issues — skill mismatch, underemployment, and application inefficiency — continue to undermine outcomes.
+        </p>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: clamp(0.5rem, 1vw, 1rem);">
+        <div class="stat-card reveal reveal-delay-2">
+          <div class="stat-value">32.4%</div>
+          <div class="stat-label">Skill Mismatch Rate (2023)</div>
+        </div>
+        <div class="stat-card reveal reveal-delay-3">
+          <div class="stat-value">1.72M</div>
+          <div class="stat-label">Underemployed Workers</div>
+        </div>
+        <div class="stat-card reveal reveal-delay-4">
+          <div class="stat-value">70%</div>
+          <div class="stat-label">Grads in Semi/Low-Skill Roles</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 5: GRADUATE PAIN POINTS -->
+<!-- ============================================================ -->
+<section class="slide" id="slide-5">
+  <div class="deco-circle bl"></div>
+  <div class="slide-content">
+    <div class="yellow-bar reveal"></div>
+    <h2 class="display-md reveal">GRADUATE PAIN POINTS</h2>
+    <div class="grid-4" style="margin-top: clamp(1rem, 2vw, 2rem);">
+      <div class="card reveal reveal-delay-1">
+        <div class="card-title">Generic Resumes</div>
+        <div class="card-body">One-size-fits-all applications fail ATS keyword filters, resulting in automatic rejection before human review.</div>
+      </div>
+      <div class="card reveal reveal-delay-2">
+        <div class="card-title">No Feedback Loop</div>
+        <div class="card-body">Zero insight into why applications are rejected. Graduates cannot improve what they cannot measure.</div>
+      </div>
+      <div class="card reveal reveal-delay-3">
+        <div class="card-title">Low Conversion</div>
+        <div class="card-body">Information asymmetry — candidates miss employer-specific needs like tailored skills framing and storytelling.</div>
+      </div>
+      <div class="card reveal reveal-delay-4">
+        <div class="card-title">Access Inequality</div>
+        <div class="card-body">Professional resume coaching concentrated in Klang Valley. 250–700 applicants per JobStreet posting.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 6: EMPLOYER PAIN POINTS -->
+<!-- ============================================================ -->
+<section class="slide" id="slide-6">
+  <div class="deco-circle tr" style="opacity: 0.4;"></div>
+  <div class="slide-content">
+    <div class="yellow-bar reveal"></div>
+    <h2 class="display-md reveal">EMPLOYER PAIN POINTS</h2>
+    <div class="grid-4" style="margin-top: clamp(1rem, 2vw, 2rem);">
+      <div class="card reveal reveal-delay-1">
+        <div class="card-title">Volume Overload</div>
+        <div class="card-body">Manual screening is time-intensive and costly. Even with ATS, applicant volumes overwhelm hiring teams.</div>
+      </div>
+      <div class="card reveal reveal-delay-2">
+        <div class="card-title">Poor Alignment</div>
+        <div class="card-body">Keyword-based ATS misses contextual fit. Qualified candidates filtered out for wrong optimisation.</div>
+      </div>
+      <div class="card reveal reveal-delay-3">
+        <div class="card-title">Skill Mismatch</div>
+        <div class="card-body">Structural oversupply in certain fields means high volumes of misaligned applications per role.</div>
+      </div>
+      <div class="card reveal reveal-delay-4">
+        <div class="card-title">Slow Hiring</div>
+        <div class="card-body">Prolonged cycles despite screening tools. Nuanced qualification assessment remains a human bottleneck.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 7: SECTION DIVIDER — Competitive Landscape -->
+<!-- ============================================================ -->
+<section class="slide" id="slide-7">
+  <div class="deco-circle center"></div>
+  <div class="slide-content">
+    <div class="section-num reveal">02</div>
+    <h2 class="display-lg reveal reveal-delay-1" style="margin-top: clamp(0.5rem, 1vw, 1rem);">COMPETITIVE<br>LANDSCAPE</h2>
+    <p class="body-text reveal reveal-delay-2" style="margin-top: clamp(0.5rem, 1vw, 1rem); max-width: 650px;">
+      No existing solution combines AI resume tailoring + ATS scoring + Malaysian market context at scale.
+    </p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 8: COMPETITOR COMPARISON TABLE -->
+<!-- ============================================================ -->
+<section class="slide" id="slide-8">
+  <div class="deco-circle bl" style="opacity: 0.3;"></div>
+  <div class="slide-content">
+    <div class="yellow-bar reveal"></div>
+    <h2 class="display-md reveal" style="margin-bottom: clamp(0.3rem, 0.6vw, 0.5rem);">COMPETITOR COMPARISON</h2>
+    <p class="body-text reveal reveal-delay-1" style="margin-bottom: clamp(0.5rem, 1vw, 1rem);"><span class="teal" style="font-weight: 600;">ResumeForgeAI vs the market — more features, fraction of the price</span></p>
+    <div class="reveal-scale reveal-delay-2">
+      <table class="comp-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>ResumeForge AI</th>
+            <th>Jobscan<br>RM 220/mo</th>
+            <th>Teal<br>RM 127/mo</th>
+            <th>Kickresume<br>RM 83/mo</th>
+            <th>Resume.io<br>RM 110/mo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>AI Resume Tailor</td><td class="check">✓ Per-JD</td><td class="cross">✗ Manual</td><td class="check">✓ Basic</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>ATS Checker</td><td class="check">✓ Multi</td><td class="check">✓ Core</td><td class="cross">✗</td><td class="check">✓ Basic</td><td class="cross">✗</td></tr>
+          <tr><td>JD Match Score</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Cover Letter Gen</td><td class="check">✓ Tone</td><td class="cross">✗</td><td class="check">✓ Basic</td><td class="check">✓ Tmpl</td><td class="check">✓ Tmpl</td></tr>
+          <tr><td>Resume Parser</td><td class="check">✓ Any PDF</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Reachout Messages</td><td class="check">✓ Unique</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Auto-Optimize</td><td class="check">✓ Unique</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Free Tier</td><td class="check">✓ Generous</td><td class="cross">✗</td><td class="check">✓ Limited</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr class="price-row"><td>Starting Price</td><td class="highlight">~RM 19.90/mo</td><td>RM 220/mo</td><td>RM 127/mo</td><td>RM 83/mo</td><td>RM 110/mo</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="reveal reveal-delay-3" style="text-align: center; margin-top: clamp(0.4rem, 0.8vw, 0.8rem); font-size: clamp(0.65rem, 0.9vw, 0.8rem); color: var(--yellow); font-weight: 600;">
+      10× cheaper &nbsp;•&nbsp; 2 unique features &nbsp;•&nbsp; Generous free tier &nbsp;•&nbsp; Built for Malaysian job seekers
+    </p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 9: SECTION DIVIDER — The Solution -->
+<!-- ============================================================ -->
+<section class="slide" id="slide-9">
+  <div class="deco-circle center"></div>
+  <div class="slide-content">
+    <div class="section-num reveal">03</div>
+    <h2 class="display-lg reveal reveal-delay-1" style="margin-top: clamp(0.5rem, 1vw, 1rem);">THE SOLUTION</h2>
+    <p class="body-text reveal reveal-delay-2" style="margin-top: clamp(0.5rem, 1vw, 1rem); max-width: 600px;">
+      ResumeForgeAI — purpose-built for Malaysia, embedded in MyNext.
+    </p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 10: KEY CAPABILITIES -->
+<!-- ============================================================ -->
+<section class="slide" id="slide-10">
+  <div class="deco-circle tr"></div>
+  <div class="slide-content">
+    <div class="yellow-bar reveal"></div>
+    <h2 class="display-md reveal">KEY CAPABILITIES</h2>
+    <div class="grid-4" style="margin-top: clamp(1rem, 2vw, 2rem);">
+      <div class="card reveal reveal-delay-1">
+        <div class="card-title">Per-JD Tailoring</div>
+        <div class="card-body">AI analyses each job description to customise resume content, keywords, and framing — not generic templates.</div>
+      </div>
+      <div class="card reveal reveal-delay-2">
+        <div class="card-title">Multi-Format ATS</div>
+        <div class="card-body">Real-time ATS compatibility scoring across multiple formats. JD match scoring quantifies alignment before submission.</div>
+      </div>
+      <div class="card reveal reveal-delay-3">
+        <div class="card-title">Auto-Optimize</div>
+        <div class="card-body">One-click resume enhancement. Unique reachout message generation for networking and employer engagement.</div>
+      </div>
+      <div class="card reveal reveal-delay-4">
+        <div class="card-title">Analytics Engine</div>
+        <div class="card-body">Usage dashboard for TalentCorp. Resume completion rates, ATS score improvements, and engagement tracking.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 11: INTEGRATION OPTIONS -->
+<!-- ============================================================ -->
+<section class="slide" id="slide-11">
+  <div class="deco-circle tr"></div>
+  <div class="slide-content">
+    <div class="grid-2">
+      <div>
+        <div class="yellow-bar reveal"></div>
+        <h2 class="display-md reveal">INTEGRATION<br>OPTIONS</h2>
+        <div style="margin-top: clamp(1rem, 2vw, 1.5rem);">
+          <div class="int-option reveal reveal-delay-1">
+            <span class="int-num" style="color: var(--muted);">01</span>
+            <div>
+              <div style="font-weight: 700; font-size: clamp(0.7rem, 0.9vw, 0.85rem); text-transform: uppercase; letter-spacing: 0.1em;">Iframe Embed</div>
+              <div style="font-size: clamp(0.6rem, 0.75vw, 0.7rem); color: var(--muted);">1 line of code · ~1 hour</div>
+            </div>
+            <span class="int-ttl" style="color: var(--muted);">1 DAY</span>
+          </div>
+          <div class="int-option reveal reveal-delay-2" style="border: 1px solid var(--yellow);">
+            <span class="int-num accent">02</span>
+            <div>
+              <div style="font-weight: 700; font-size: clamp(0.7rem, 0.9vw, 0.85rem); text-transform: uppercase; letter-spacing: 0.1em;">White-Label <span class="int-badge">★ Recommended</span></div>
+              <div style="font-size: clamp(0.6rem, 0.75vw, 0.7rem); color: var(--muted);">1 DNS record · ~30 min</div>
+            </div>
+            <span class="int-ttl accent">1–2 WK</span>
+          </div>
+          <div class="int-option reveal reveal-delay-3">
+            <span class="int-num" style="color: var(--muted);">03</span>
+            <div>
+              <div style="font-weight: 700; font-size: clamp(0.7rem, 0.9vw, 0.85rem); text-transform: uppercase; letter-spacing: 0.1em;">API Integration</div>
+              <div style="font-size: clamp(0.6rem, 0.75vw, 0.7rem); color: var(--muted);">Full dev build · weeks of work</div>
+            </div>
+            <span class="int-ttl" style="color: var(--muted);">2–3 MO</span>
+          </div>
+        </div>
+      </div>
+      <div class="card reveal-right reveal-delay-3" style="padding: clamp(1.2rem, 2vw, 2rem);">
+        <div class="label" style="margin-bottom: clamp(0.5rem, 1vw, 0.8rem);">Recommended: Option 2 — White-Label</div>
+        <div style="display: flex; flex-direction: column; gap: clamp(0.3rem, 0.6vw, 0.5rem);">
+          <p class="body-text" style="font-size: clamp(0.65rem, 0.85vw, 0.78rem);">→ &nbsp;100% MyNext-branded experience</p>
+          <p class="body-text" style="font-size: clamp(0.65rem, 0.85vw, 0.78rem);">→ &nbsp;ResumeForgeAI invisible to end users</p>
+          <p class="body-text" style="font-size: clamp(0.65rem, 0.85vw, 0.78rem);">→ &nbsp;Zero dev burden — 1 DNS record only</p>
+          <p class="body-text" style="font-size: clamp(0.65rem, 0.85vw, 0.78rem);">→ &nbsp;Live within 1–2 weeks</p>
+          <p class="body-text" style="font-size: clamp(0.65rem, 0.85vw, 0.78rem);">→ &nbsp;Scales from 5K to 100K+ users</p>
+          <p class="body-text" style="font-size: clamp(0.65rem, 0.85vw, 0.78rem);">→ &nbsp;All updates handled by ResumeForgeAI</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 12: SECTION DIVIDER — Pricing -->
+<!-- ============================================================ -->
+<section class="slide" id="slide-12">
+  <div class="deco-circle center"></div>
+  <div class="slide-content">
+    <div class="section-num reveal">04</div>
+    <h2 class="display-lg reveal reveal-delay-1" style="margin-top: clamp(0.5rem, 1vw, 1rem);">PRICING MODEL</h2>
+    <p class="body-text reveal reveal-delay-2" style="margin-top: clamp(0.5rem, 1vw, 1rem); max-width: 600px;">
+      Pilot-to-scale framework with progressive volume discounts.
+    </p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 13: PRICING CARDS -->
+<!-- ============================================================ -->
+<section class="slide" id="slide-13">
+  <div class="deco-circle tr" style="opacity: 0.4;"></div>
+  <div class="slide-content">
+    <div class="yellow-bar reveal"></div>
+    <h2 class="display-md reveal" style="margin-bottom: clamp(0.5rem, 1vw, 1rem);">PRICING MODEL</h2>
+    <div class="grid-4" style="align-items: stretch;">
+      <div class="price-card reveal reveal-delay-1">
+        <div class="price-name">Rintis (Pilot)</div>
+        <div class="price-amount">RM 5.00</div>
+        <div class="price-per">Per User</div>
+        <div class="price-users">Up to 5,000</div>
+        <div class="price-total">RM 25,000</div>
+        <div class="price-desc">Basic integration, onboarding, usage dashboard, 3-month pilot window</div>
+      </div>
+      <div class="price-card reveal reveal-delay-2">
+        <div class="price-name">Berkembang (Growth)</div>
+        <div class="price-amount">RM 4.00</div>
+        <div class="price-per">Per User</div>
+        <div class="price-users">5,001 – 25,000</div>
+        <div class="price-total">RM 100,000</div>
+        <div class="price-desc">Full white-label, analytics reporting, quarterly reviews, dedicated support</div>
+      </div>
+      <div class="price-card reveal reveal-delay-3">
+        <div class="price-name">Nasional (Scale)</div>
+        <div class="price-amount">RM 3.00</div>
+        <div class="price-per">Per User</div>
+        <div class="price-users">25,001 – 100,000</div>
+        <div class="price-total">RM 300,000</div>
+        <div class="price-desc">Custom branding, API integration, priority support, bi-monthly reviews</div>
+      </div>
+      <div class="price-card reveal reveal-delay-4">
+        <div class="price-name">Strategik (Unlimited)</div>
+        <div class="price-amount">RM 2.50</div>
+        <div class="price-per">Per User</div>
+        <div class="price-users">100,001+</div>
+        <div class="price-total">Negotiable</div>
+        <div class="price-desc">Enterprise package, co-branding, joint impact reporting, SLA guarantee</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 14: IMPLEMENTATION ROADMAP -->
+<!-- ============================================================ -->
+<section class="slide" id="slide-14">
+  <div class="deco-circle bl" style="opacity: 0.3;"></div>
+  <div class="slide-content">
+    <div class="yellow-bar reveal"></div>
+    <h2 class="display-md reveal" style="margin-bottom: clamp(0.5rem, 1vw, 1rem);">IMPLEMENTATION ROADMAP</h2>
+    <div class="grid-5">
+      <div class="road-card reveal reveal-delay-1">
+        <div class="road-num">01</div>
+        <div class="road-name">Discovery</div>
+        <div class="road-time">Wk 1–2</div>
+        <div class="road-details">Technical scoping<br>Stakeholder alignment<br>Pilot cohort selection</div>
+      </div>
+      <div class="road-card reveal reveal-delay-2">
+        <div class="road-num">02</div>
+        <div class="road-name">White-Label Setup</div>
+        <div class="road-time">Wk 2–3</div>
+        <div class="road-details">Brand customisation<br>DNS record config<br>UAT deployment</div>
+      </div>
+      <div class="road-card reveal reveal-delay-3">
+        <div class="road-num">03</div>
+        <div class="road-name">Pilot Launch</div>
+        <div class="road-time">Wk 4–16</div>
+        <div class="road-details">3-month live pilot<br>User onboarding<br>Data collection</div>
+      </div>
+      <div class="road-card reveal reveal-delay-4">
+        <div class="road-num">04</div>
+        <div class="road-name">Evaluation</div>
+        <div class="road-time">Wk 17–18</div>
+        <div class="road-details">Impact analysis<br>Feedback synthesis<br>Pilot report</div>
+      </div>
+      <div class="road-card reveal reveal-delay-5">
+        <div class="road-num">05</div>
+        <div class="road-name">Scale Decision</div>
+        <div class="road-time">Wk 19+</div>
+        <div class="road-details">Tier upgrade<br>National rollout<br>Expanded roadmap</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 15: IMPACT & STRATEGIC VALUE -->
+<!-- ============================================================ -->
+<section class="slide" id="slide-15">
+  <div class="deco-circle tr"></div>
+  <div class="slide-content">
+    <div class="yellow-bar reveal"></div>
+    <h2 class="display-md reveal">IMPACT & STRATEGIC VALUE</h2>
+    <div class="grid-4" style="margin-top: clamp(1rem, 2vw, 2rem);">
+      <div class="card reveal reveal-delay-1">
+        <div class="card-title">Measurable KPIs</div>
+        <div class="card-body">Resume completion rate, ATS score improvement, user engagement, interview conversion, institutional coverage.</div>
+      </div>
+      <div class="card reveal reveal-delay-2">
+        <div class="card-title">Enhanced MyNext</div>
+        <div class="card-body">AI resume tailoring becomes a native capability — increasing platform stickiness and graduate engagement.</div>
+      </div>
+      <div class="card reveal reveal-delay-3">
+        <div class="card-title">Equitable Access</div>
+        <div class="card-body">Graduates across all states get AI-quality coaching. Reduces the urban-rural employability gap at scale.</div>
+      </div>
+      <div class="card reveal reveal-delay-4">
+        <div class="card-title">Cost Efficient</div>
+        <div class="card-body">10× cheaper than competitors. RM25K pilot within standard budget thresholds. Maximum impact per ringgit.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 16: CLOSING -->
+<!-- ============================================================ -->
+<section class="slide" id="slide-16" style="justify-content: center; text-align: center;">
+  <div class="deco-circle center" style="left: 15vw; top: -5vh; width: clamp(500px, 60vw, 900px); height: clamp(500px, 60vw, 900px);"></div>
+  <div class="slide-content" style="text-align: center;">
+    <h2 class="reveal" style="font-family: var(--font-display); font-size: clamp(2.5rem, 6vw, 5rem); color: var(--yellow); line-height: 1;">LET'S ENHANCE<br>GRADUATE EMPLOYABILITY</h2>
+    <p class="body-text reveal reveal-delay-1" style="margin: clamp(1rem, 2vw, 2rem) auto 0; font-size: clamp(0.8rem, 1.2vw, 1rem);">
+      ResumeForgeAI × MyNext &nbsp;•&nbsp; Pilot-ready &nbsp;•&nbsp; White-label in 2 weeks
+    </p>
+    <p class="reveal reveal-delay-2" style="margin-top: clamp(1rem, 2vw, 2rem); font-size: clamp(0.8rem, 1vw, 0.95rem); color: var(--white);">
+      [Email Address] &nbsp;|&nbsp; [Phone Number]
+    </p>
+  </div>
+</section>
+
+<!-- === JAVASCRIPT === -->
+<script>
+(function() {
+  /* === Slide Setup === */
+  const slides = document.querySelectorAll('.slide');
+  const totalSlides = slides.length;
+  const navDots = document.getElementById('navDots');
+  const counter = document.getElementById('slideCounter');
+  let currentSlide = 0;
+
+  /* === Create Nav Dots === */
+  slides.forEach((_, i) => {
+    const dot = document.createElement('button');
+    dot.className = 'nav-dot';
+    dot.setAttribute('aria-label', `Slide ${i + 1}`);
+    dot.addEventListener('click', () => goToSlide(i));
+    navDots.appendChild(dot);
+  });
+  const dots = document.querySelectorAll('.nav-dot');
+
+  /* === Go To Slide === */
+  function goToSlide(index) {
+    if (index < 0 || index >= totalSlides) return;
+    slides[index].scrollIntoView({ behavior: 'smooth' });
+  }
+
+  /* === Update Active State === */
+  function updateActive(index) {
+    currentSlide = index;
+    dots.forEach((d, i) => d.classList.toggle('active', i === index));
+    counter.textContent = `${index + 1} / ${totalSlides}`;
+    triggerReveals(slides[index]);
+  }
+
+  /* === Reveal Animations === */
+  function triggerReveals(slide) {
+    const els = slide.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale');
+    els.forEach(el => el.classList.add('visible'));
+  }
+
+  /* === Intersection Observer === */
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const idx = Array.from(slides).indexOf(entry.target);
+        updateActive(idx);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  slides.forEach(s => observer.observe(s));
+
+  /* === Keyboard Navigation === */
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault();
+      goToSlide(currentSlide + 1);
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      goToSlide(currentSlide - 1);
+    }
+  });
+
+  /* === Init === */
+  updateActive(0);
+  triggerReveals(slides[0]);
+})();
+</script>
+</body>
+</html>
