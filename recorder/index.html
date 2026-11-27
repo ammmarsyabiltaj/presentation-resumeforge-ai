@@ -167,7 +167,7 @@ body.editing #edprog{display:block}
   <p class="hint">While recording: tap the text to pause or resume, use minus and plus to change speed. When paused you can drag the text.</p>
   <label class="c"><input type="checkbox" id="guide" checked> Show card zone (keep your face below it)</label>
   <h4>Camera</h4>
-  <label class="c"><input type="checkbox" id="mirror" checked> Mirror preview (the video is saved unmirrored)</label>
+  <label class="c"><input type="checkbox" id="mirror" checked> Mirror video, like a selfie (preview and final video)</label>
   <label class="f">Camera <select id="camSel"></select></label>
   <label class="f">Microphone <select id="micSel"></select></label>
   <div class="row"><button class="btn" id="restart">Restart camera</button><span class="hint" id="camst"></span></div>
@@ -176,6 +176,9 @@ body.editing #edprog{display:block}
   <label class="f">Line timing for cards and captions <select id="timing"><option value="scroll">Follow the teleprompter scroll</option><option value="text">Spread by text length</option></select></label>
   <label class="c"><input type="checkbox" id="cards" checked> White info cards at the top</label>
   <label class="c"><input type="checkbox" id="caps" checked> Small spoken captions</label>
+  <label class="c"><input type="checkbox" id="endc" checked> ResumeForge AI end card (2 seconds)</label>
+  <label class="f">Logo for the end card (PNG) <input type="file" id="logoIn" accept="image/*"></label>
+  <div class="row"><img id="logoPrev" alt="" style="max-height:44px;display:none;background:#fff;border-radius:8px;padding:4px"><span class="hint" id="logoSt">No logo yet: the end card shows the name as text.</span></div>
   <label class="f">Background music (optional) <input type="file" id="music" accept="audio/*"></label>
   <label class="f">Music volume <input type="range" id="mvol" min="0" max="0.4" step="0.01" value="0.10"></label>
 </div>
@@ -207,13 +210,13 @@ const SCRIPTS=[
  {say:'Guna formula ni: kata kerja, apa yang anda buat, dan hasilnya.',card:{t:'Formula',items:['Kata kerja','Apa yang anda buat','Hasilnya']}},
  {say:'Contoh: Mengurus 3 akaun media sosial syarikat dan menaikkan pengikut Instagram dari 2,000 ke 9,500 dalam 6 bulan.',card:{t:'Sebelum vs selepas',pair:[['Sebelum','Bertanggungjawab menguruskan media sosial'],['Selepas (contoh)','Mengurus 3 akaun media sosial dan menaikkan pengikut Instagram dari 2,000 ke 9,500 dalam 6 bulan']]}},
  {say:'Tiada nombor? Guna skala. Berapa orang, berapa projek, berapa kerap. Contoh: Melatih 4 pekerja baharu setiap suku tahun.',card:{t:'Tiada nombor? Guna skala',items:['Berapa orang','Berapa projek','Berapa kerap'],f:'Contoh: Melatih 4 pekerja baharu setiap suku tahun'}},
- {say:'Ada 10 bullet nak tulis semula? Tampal iklan kerja dalam ResumeForge, dia cadangkan ayat ikut bahasa iklan. Nombornya, anda yang isi.',card:{t:'ResumeForge: Tailor',s:'Tampal iklan, dapat cadangan ayat',f:'Nombor tetap anda yang isi'},note:'Later: overlay a 4-second screen-record of Tailor'},
+ {say:'Ada 10 bullet nak tulis semula? Tampal iklan kerja dalam ResumeForge AI, dia cadangkan ayat ikut bahasa iklan. Nombornya, anda yang isi.',card:{t:'ResumeForge AI: Tailor',s:'Tampal iklan, dapat cadangan ayat',f:'Nombor tetap anda yang isi'},note:'Later: overlay a 4-second screen-record of Tailor'},
  {say:'Save video ni sebelum anda kemas kini resume.',card:{t:'Save video ni',s:'Sebelum anda kemas kini resume'}}]},
 {id:'s5',name:'Script 5 · Jangan guna 1 resume',day:'Day 5 · Fri 4 Dec · MOFU',lines:[
  {say:'Hantar resume yang sama ke 50 syarikat? Itu antara sebab tak ada yang panggil.',head:'1 resume. 50 permohonan. 0 panggilan.'},
  {say:'Setiap iklan kerja guna kata kunci lain. Sistem ATS dan HR cari kata kunci tu dulu.',card:{t:'Setiap iklan, kata kunci lain',s:'ATS dan HR cari kata kunci dulu'}},
- {say:'Tapi tulis semula resume untuk setiap kerja boleh ambil masa sejam. Ini cara saya buat dalam seminit.',card:{t:'Tulis semula setiap kali?',pair:[['Manual','Lebih kurang sejam setiap kerja'],['ResumeForge','Lebih kurang seminit']]}},
- {say:'Tampal iklan kerja. ResumeForge tulis semula ringkasan, bullet dan kemahiran supaya ikut bahasa iklan tu.',card:{t:'Tampal iklan kerja',items:['Ringkasan','Bullet','Kemahiran'],f:'Ditulis semula ikut bahasa iklan'},note:'Later: overlay screen-record of the Tailor feature'},
+ {say:'Tapi tulis semula resume untuk setiap kerja boleh ambil masa sejam. Ini cara saya buat dalam seminit.',card:{t:'Tulis semula setiap kali?',pair:[['Manual','Lebih kurang sejam setiap kerja'],['ResumeForge AI','Lebih kurang seminit']]}},
+ {say:'Tampal iklan kerja. ResumeForge AI tulis semula ringkasan, bullet dan kemahiran supaya ikut bahasa iklan tu.',card:{t:'Tampal iklan kerja',items:['Ringkasan','Bullet','Kemahiran'],f:'Ditulis semula ikut bahasa iklan'},note:'Later: overlay screen-record of the Tailor feature'},
  {say:'Lepas tu semak dengan ATS Checker. Terus nampak apa yang lulus dan apa yang perlu dibaiki.',card:{t:'ATS Checker',s:'Apa yang lulus, apa yang perlu dibaiki'},note:'Later: overlay the real ATS Checker result'},
  {say:'Setiap versi disimpan dengan iklannya. Bila dipanggil interview, anda tahu resume mana yang anda hantar.',card:{t:'Setiap versi disimpan',s:'Bersama iklan kerjanya'}},
  {say:'Pelan percuma cukup untuk lebih kurang 10 resume disesuaikan sebulan. Link di bio.',card:{t:'Cuba percuma',s:'Lebih kurang 10 resume disesuaikan sebulan',f:'Link di bio'}}]},
@@ -252,7 +255,7 @@ const pickMime=()=>['video/mp4;codecs=avc1,mp4a.40.2','video/mp4;codecs=avc1','v
 const fmt=t=>Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
 
 /* ---------- settings ---------- */
-const SET=['fs','spd','guide','mirror','cdOn','gap','cards','caps','mvol','timing'];
+const SET=['fs','spd','guide','mirror','cdOn','gap','cards','caps','mvol','timing','endc'];
 try{const s=JSON.parse(localStorage.getItem('rfrec2')||'{}');SET.forEach(k=>{if(s[k]!==undefined){const el=$(k);el.type==='checkbox'?el.checked=s[k]:el.value=s[k]}})}catch(e){}
 const saveSet=()=>{try{const s={};SET.forEach(k=>{const el=$(k);s[k]=el.type==='checkbox'?el.checked:el.value});localStorage.setItem('rfrec2',JSON.stringify(s))}catch(e){}};
 SET.forEach(k=>$(k).addEventListener('input',()=>{saveSet();applySet()}));
@@ -266,6 +269,11 @@ const pxps=()=>+$('spd').value*(+$('fs').value)*0.12;
 function setSpeed(d){const e=$('spd');e.value=Math.max(+e.min,Math.min(+e.max,+e.value+d));saveSet();applySet()}
 $('slower').onclick=()=>setSpeed(-1);$('faster').onclick=()=>setSpeed(1);
 
+/* ---------- logo ---------- */
+let logoImg=null;
+function loadLogo(url){if(!url)return;const im=new Image();im.onload=()=>{logoImg=im;$('logoPrev').src=url;$('logoPrev').style.display='block';$('logoSt').textContent='Logo ready.'};im.src=url}
+try{loadLogo(localStorage.getItem('rflogo'))}catch(e){}
+$('logoIn').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{localStorage.setItem('rflogo',r.result)}catch(e){}loadLogo(r.result)};r.readAsDataURL(f)};
 /* ---------- storage ---------- */
 let db=null;
 function idb(){return new Promise(res=>{try{const r=indexedDB.open('rf-recorder2',1);r.onupgradeneeded=()=>r.result.createObjectStore('takes');r.onsuccess=()=>res(r.result);r.onerror=()=>res(null)}catch(e){res(null)}})}
@@ -418,7 +426,15 @@ function capChunks(say,dur){
   const ch=[];let c=null;words.forEach(o=>{if(!c||c.ws.length>=3){c={ws:[],t:o.t};ch.push(c)}c.ws.push(o.w);if(o.brk)c=null});
   ch.forEach((c,i)=>{c.text=c.ws.join(' ');c.end=ch[i+1]?ch[i+1].t:dur});return ch;
 }
-function drawCover(ctx,v){const vw=v.videoWidth,vh=v.videoHeight;if(!vw)return;const s=Math.max(W/vw,H/vh),dw=vw*s,dh=vh*s;ctx.drawImage(v,(W-dw)/2,(H-dh)/2,dw,dh)}
+function drawCover(ctx,v){const vw=v.videoWidth,vh=v.videoHeight;if(!vw)return;const s=Math.max(W/vw,H/vh),dw=vw*s,dh=vh*s;
+  ctx.save();if($('mirror').checked){ctx.translate(W,0);ctx.scale(-1,1)}ctx.drawImage(v,(W-dw)/2,(H-dh)/2,dw,dh);ctx.restore()}
+function drawEnd(ctx,a,cta){
+  ctx.save();ctx.globalAlpha=a;ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+  let y=H*0.42;
+  if(logoImg){const mw=620,mh=260,sc=Math.min(mw/logoImg.width,mh/logoImg.height),w=logoImg.width*sc,h=logoImg.height*sc;ctx.drawImage(logoImg,(W-w)/2,y-h,w,h);y+=60}
+  else{ctx.font='800 92px Inter';ctx.fillStyle='#111';ctx.textAlign='center';ctx.fillText('ResumeForge AI',W/2,y);y+=90}
+  ctx.font='600 44px Inter';ctx.fillStyle='#e5402f';ctx.textAlign='center';ctx.fillText(cta,W/2,y+30);
+  ctx.restore()}
 
 
 /* ---------- edit: render ---------- */
@@ -426,64 +442,79 @@ const srtTime=t=>{const ms=Math.max(0,Math.round(t*1000)),h=Math.floor(ms/360000
 const actBetween=(segs,a,b)=>segs.reduce((s,[x,y])=>s+Math.max(0,Math.min(b,y)-Math.max(a,x)),0);
 function rawAtActive(segs,at){let acc=0;for(const [x,y] of segs){if(acc+(y-x)>=at)return x+(at-acc);acc+=y-x}return segs.length?segs[segs.length-1][1]:0}
 let rendering=false;
+const CTA={s1:'Follow untuk tips resume setiap hari',s2:'Follow untuk tips resume setiap hari',s3:'Cuba percuma · link di bio',s4:'Follow untuk siri interview',s5:'Cuba percuma · link di bio'};
 async function renderScript(){
   if(rendering||rec)return;const S=SCRIPTS[cur],take=takes[S.id];
   if(!take){$('rstat').textContent='Record this script first.';return}
-  const A=getAC();A.resume();rendering=true;$('render').disabled=true;
+  rendering=true;$('render').disabled=true;
+  // Create and unlock both players inside the tap, before any await (iPhone rule for sound)
+  const A=getAC();A.resume();const url=URL.createObjectURL(take.blob);
+  const E=[0,1].map(()=>{const v=document.createElement('video');v.playsInline=true;v.setAttribute('playsinline','');v.preload='auto';v.src=url;
+    v.style.cssText='position:fixed;width:2px;height:2px;opacity:0;pointer-events:none;left:0;top:0';document.body.appendChild(v);
+    const pr=v.play();if(pr)pr.then(()=>v.pause()).catch(()=>{});return {v}});
+  try{
   await document.fonts.load('800 54px Inter');await document.fonts.load('500 56px Inter');await A.resume();
   $('rstat').textContent='Finding pauses to cut…';
   let segs;try{segs=await speechSegs(take.blob,+$('gap').value)}catch(e){segs=null}
-  const v=document.createElement('video');v.playsInline=true;v.setAttribute('playsinline','');v.preload='auto';v.src=URL.createObjectURL(take.blob);
-  v.style.cssText='position:fixed;width:2px;height:2px;opacity:0;pointer-events:none;left:0;top:0';document.body.appendChild(v);
-  if(!segs){await new Promise(r=>{v.onloadedmetadata=r;setTimeout(r,3000)});segs=[[0,isFinite(v.duration)?v.duration:600]]}
+  const v0=E[0].v;if(!(v0.readyState>=1))await new Promise(r=>{v0.addEventListener('loadedmetadata',r,{once:true});setTimeout(r,4000)});
+  if(!segs)segs=[[0,isFinite(v0.duration)?v0.duration:600]];
   const N=S.lines.length,total=actBetween(segs,0,1e9);
-  // line start times on the raw recording
   let starts=[];const useScroll=$('timing').value==='scroll'&&take.marks&&take.marks.filter(x=>x!=null).length>1;
   if(useScroll){const lag=0.35;for(let i=0;i<N;i++)starts[i]=take.marks[i]==null?null:(i===0?0:take.marks[i]+lag)}
   else{const w=S.lines.map(l=>l.say.length),tw=w.reduce((a,b)=>a+b,0);let acc=0;for(let i=0;i<N;i++){starts[i]=i===0?0:rawAtActive(segs,acc/tw*total);acc+=w[i]}}
-  const lines=[];for(let i=0;i<N;i++){if(starts[i]==null)continue;const prev=lines[lines.length-1];const st=prev?Math.max(starts[i],prev.st):starts[i];lines.push({i,l:S.lines[i],st})}
+  const lines=[];for(let i=0;i<N;i++){if(starts[i]==null)continue;const prev=lines[lines.length-1];lines.push({i,l:S.lines[i],st:prev?Math.max(starts[i],prev.st):starts[i]})}
   lines.forEach((o,k)=>{o.en=lines[k+1]?lines[k+1].st:1e9;o.a0=actBetween(segs,0,o.st);o.dur=actBetween(segs,o.st,o.en);o.caps=capChunks(o.l.say,Math.max(o.dur,0.5))});
   const srt=[];let n=1;lines.forEach(o=>o.caps.forEach(c=>{if(c.t<o.dur)srt.push(`${n++}\n${srtTime(o.a0+c.t)} --> ${srtTime(o.a0+Math.min(c.end,o.dur))}\n${c.text}\n`)}));
   closeSheets();document.body.classList.add('editing');
   const cv=$('cv'),ctx=cv.getContext('2d'),dest=A.createMediaStreamDestination();
+  E.forEach(e=>{e.src=A.createMediaElementSource(e.v);e.g=A.createGain();e.g.gain.value=0;e.src.connect(e.g);e.g.connect(dest)});
   let music=null;const mf=$('music').files[0];
   if(mf){music=new Audio(URL.createObjectURL(mf));music.loop=true;const ms=A.createMediaElementSource(music),mg=A.createGain();mg.gain.value=+$('mvol').value;ms.connect(mg);mg.connect(dest)}
   const out=new MediaStream([...cv.captureStream(30).getVideoTracks(),...dest.stream.getAudioTracks()]);
   const mime=pickMime(),R=new MediaRecorder(out,mime?{mimeType:mime,videoBitsPerSecond:10e6}:{}),parts=[];R.ondataavailable=e=>e.data.size&&parts.push(e.data);
-  const resume=()=>{if(R.state==='inactive')R.start(250);else if(R.state==='paused')R.resume();if(music&&music.paused)music.play().catch(()=>{})};
-  const pause=()=>{if(R.state==='recording')R.pause();if(music)music.pause()};
-  const src=A.createMediaElementSource(v),g=A.createGain();g.gain.value=0;src.connect(g);g.connect(dest);
-  await new Promise(done=>{
-    let k=0,fin=false;const end=()=>{if(fin)return;fin=true;pause();g.gain.value=0;v.pause();src.disconnect();v.remove();done()};
-    v.onended=end;v.onerror=end;v.playbackRate=4;v.play().catch(end);
-    const tick=()=>{if(fin)return;const t=v.currentTime;
-      while(k<segs.length&&t>=segs[k][1]){k++;pause();g.gain.value=0;v.playbackRate=4}
-      if(k>=segs.length){end();return}
-      if(t>=segs[k][0]&&v.videoWidth){if(v.playbackRate!==1)v.playbackRate=1;g.gain.value=1;resume();
-        const o=lines.filter(o=>o.st<=t).pop()||lines[0];const lt=actBetween(segs,o.st,t);
-        const done=actBetween(segs,0,t);$('prog').firstChild.style.width=(done/total*100)+'%';$('edprog').textContent=`Editing ${fmt(done)} / ${fmt(total)}`;
-        ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);drawCover(ctx,v);
-        let below=330;const a=Math.min(1,lt/0.15),cards=$('cards').checked;
-        if(o.l.card&&cards)below=drawCard(ctx,o.l.card,a)+40;
-        if(o.l.head)drawHead(ctx,o.l.head,o.l.card&&cards?below+60:600);
-        if($('caps').checked&&lt<o.dur+0.05){const c=o.caps.find(c=>lt>=c.t&&lt<c.end)||o.caps[o.caps.length-1];if(c)drawCap(ctx,c.text)}
-      }
-      requestAnimationFrame(tick)};
-    requestAnimationFrame(tick);
-  });
-  const blob=await new Promise(r=>{R.onstop=()=>r(new Blob(parts,{type:R.mimeType||'video/mp4'}));if(R.state!=='inactive')R.stop();else r(new Blob(parts))});
+  const seekTo=(e,t)=>new Promise(r=>{const v=e.v;v.pause();let ok=false;const f=()=>{if(ok)return;ok=true;v.removeEventListener('seeked',f);r()};v.addEventListener('seeked',f);v.currentTime=t;setTimeout(f,3000)});
+  const fade=(e,to)=>{const g=e.g.gain;g.cancelScheduledValues(A.currentTime);g.setTargetAtTime(to,A.currentTime,0.008)};
+  // drawing runs every frame from whichever player is live; the players never skip or change speed, so sound and lips stay together
+  let live=E[0],endT=0,fin=false;const cards=$('cards').checked,capsOn=$('caps').checked,endOn=$('endc').checked,cta=CTA[S.id]||'Cuba percuma · link di bio';
+  const draw=()=>{if(fin)return;
+    if(endT){const a=Math.min(1,(performance.now()-endT)/250);drawEnd(ctx,a,cta);requestAnimationFrame(draw);return}
+    const v=live.v,t=v.currentTime;
+    if(v.videoWidth){
+      const o=lines.filter(o=>o.st<=t).pop()||lines[0],lt=actBetween(segs,o.st,t),done=actBetween(segs,0,t);
+      $('prog').firstChild.style.width=(done/total*100)+'%';$('edprog').textContent=`Editing ${fmt(done)} / ${fmt(total)}`;
+      ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);drawCover(ctx,v);
+      let below=330;const a=Math.min(1,lt/0.15);
+      if(o.l.card&&cards)below=drawCard(ctx,o.l.card,a)+40;
+      if(o.l.head)drawHead(ctx,o.l.head,o.l.card&&cards?below+60:600);
+      if(capsOn&&lt<o.dur+0.05){const c=o.caps.find(c=>lt>=c.t&&lt<c.end)||o.caps[o.caps.length-1];if(c)drawCap(ctx,c.text)}
+    }
+    requestAnimationFrame(draw)};
+  await seekTo(E[0],segs[0][0]);
+  requestAnimationFrame(draw);await new Promise(r=>setTimeout(r,120));
+  R.start(250);if(music)music.play().catch(()=>{});
+  for(let i=0;i<segs.length;i++){
+    const e=E[i%2],nx=E[(i+1)%2];live=e;fade(e,1);
+    try{await e.v.play()}catch(err){}
+    const prep=i+1<segs.length?seekTo(nx,segs[i+1][0]):null;
+    await new Promise(r=>{const w=()=>{if(e.v.currentTime>=segs[i][1]||e.v.ended||e.v.paused&&e.v.readyState<2)r();else requestAnimationFrame(w)};w()});
+    fade(e,0);e.v.pause();if(prep)await prep;
+  }
+  if(endOn){endT=performance.now();await new Promise(r=>setTimeout(r,2000))}
+  fin=true;
+  const blob=await new Promise(r=>{R.onstop=()=>r(new Blob(parts,{type:R.mimeType||'video/mp4'}));R.stop()});
+  if(music)music.pause();
   $('prog').firstChild.style.width='100%';
-  const ext=(R.mimeType||'').includes('mp4')?'mp4':'webm',url=URL.createObjectURL(blob),surl=URL.createObjectURL(new Blob([srt.join('\n')],{type:'text/plain'}));
-  $('out').innerHTML=`<video controls playsinline src="${url}"></video>
+  const ext=(R.mimeType||'').includes('mp4')?'mp4':'webm',ourl=URL.createObjectURL(blob),surl=URL.createObjectURL(new Blob([srt.join('\n')],{type:'text/plain'}));
+  $('out').innerHTML=`<video controls playsinline src="${ourl}"></video>
    <p class="row"><button id="share" type="button" class="btn pri">Save to Photos / Share</button></p>
-   <p class="row"><a class="btn" href="${url}" download="resumeforge-${S.id}-edited.${ext}">Download video (.${ext})</a><a class="btn" href="${surl}" download="resumeforge-${S.id}.srt">Captions (.srt)</a></p>`+
+   <p class="row"><a class="btn" href="${ourl}" download="resumeforge-ai-${S.id}.${ext}">Download video (.${ext})</a><a class="btn" href="${surl}" download="resumeforge-ai-${S.id}.srt">Captions (.srt)</a></p>`+
    (useScroll?'':'<p class="hint">Lines were timed by text length.</p>')+
    (lines.length<N?`<p class="hint">You stopped before the end, so ${N-lines.length} line(s) were left out.</p>`:'');
-  const file=new File([blob],`resumeforge-${S.id}-edited.${ext}`,{type:blob.type||'video/mp4'});
+  const file=new File([blob],`resumeforge-ai-${S.id}.${ext}`,{type:blob.type||'video/mp4'});
   $('share').onclick=async()=>{try{if(navigator.canShare&&navigator.canShare({files:[file]}))await navigator.share({files:[file]});else $('rstat').textContent='Sharing not supported here: use Download.'}catch(e){}};
   $('rstat').textContent=`Done · ${fmt(total)} after cutting pauses`;
-  document.body.classList.remove('editing');openSheet('shEdit');
-  rendering=false;$('render').disabled=false;
+  }catch(err){$('rstat').textContent='Edit failed: '+err.message}
+  finally{E.forEach(e=>{try{e.v.pause();e.src&&e.src.disconnect();e.v.remove()}catch(x){}});document.body.classList.remove('editing');openSheet('shEdit');rendering=false;$('render').disabled=false}
 }
 $('render').onclick=renderScript;
 
