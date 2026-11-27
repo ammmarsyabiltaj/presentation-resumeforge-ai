@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ResumeForge Recorder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a quiet recording studio, tools out of the way of the face
+   IDEA: a phone on a tripod with a prompter glass over the lens
+   PICTURE: the 9:16 stage with the live camera and prompter
+   COLOUR and TYPE: near-black studio, white text, one red record accent; Inter
+   LAYOUT: scripts left, stage centre, edit settings right; stacks on phones */
+:root{--bg:#0d0e10;--panel:#16181b;--line:#2a2d32;--ink:#f2f2f0;--mute:#9a9ea6;--red:#ff3b30;--ok:#34c759}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Inter,system-ui,sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--line)}
+header h1{font-size:17px;margin:0;font-weight:700}
+header .st{color:var(--mute);font-size:13px;margin-left:auto}
+main{display:grid;grid-template-columns:300px minmax(0,1fr) 300px;gap:0;height:calc(100vh - 50px)}
+aside,section{overflow:auto;padding:14px}
+aside{background:var(--panel)}
+aside.l{border-right:1px solid var(--line)}aside.r{border-left:1px solid var(--line)}
+h2{font-size:12px;color:var(--mute);font-weight:600;margin:16px 0 8px}
+h2:first-child{margin-top:0}
+.sc{display:block;width:100%;text-align:left;background:#1d2024;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;font:inherit}
+.sc.on{border-color:#fff}
+.sc small{display:block;color:var(--mute);font-size:12px}
+.sc b{font-weight:600}
+.ln{display:flex;gap:8px;align-items:flex-start;padding:8px;border-radius:8px;cursor:pointer;font-size:13px;color:#d4d6da}
+.ln.on{background:#24282d;color:#fff}
+.ln i{flex:none;width:22px;height:22px;border-radius:50%;border:1px solid #555;font-style:normal;font-size:11px;display:grid;place-items:center;margin-top:1px}
+.ln.done i{background:var(--ok);border-color:var(--ok);color:#000}
+section{display:flex;flex-direction:column;align-items:center;gap:12px}
+.stage{position:relative;height:min(74vh,880px);aspect-ratio:9/16;background:#000;border-radius:14px;overflow:hidden}
+.stage video,.stage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.mir{transform:scaleX(-1)}
+#tp{position:absolute;left:0;right:0;top:0;padding:18px 18px 22px;background:linear-gradient(#000d,#0009 80%,#0000);font-weight:600;line-height:1.3}
+#tp .now span{color:#fff}#tp .now span.dim{color:#ffffff55}
+#tp .nx{color:#ffffff70;font-weight:500;margin-top:10px;font-size:.62em}
+#tp .note{color:#ffcc66;font-weight:500;font-size:.5em;margin-top:8px}
+.guide{position:absolute;left:5%;right:5%;border:1px dashed #ffffff30;border-radius:10px;pointer-events:none}
+#cd{position:absolute;inset:0;display:none;place-items:center;font-size:120px;font-weight:800;background:#0006}
+#recdot{position:absolute;right:14px;bottom:14px;display:none;align-items:center;gap:6px;background:#000a;padding:5px 10px;border-radius:20px;font-size:13px}
+#recdot:before{content:"";width:10px;height:10px;border-radius:50%;background:var(--red)}
+.bar{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+button,.btn{font:600 15px Inter,sans-serif;min-height:44px;padding:0 18px;border-radius:22px;border:1px solid var(--line);background:#1d2024;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+button:focus-visible,.sc:focus-visible{outline:2px solid #fff;outline-offset:2px}
+#rec{background:var(--red);border-color:var(--red);color:#fff;min-width:150px;justify-content:center}
+#rec.live{background:#fff;color:#000;border-color:#fff}
+button:disabled{opacity:.4;cursor:default}
+label.f{display:block;margin:10px 0;font-size:13px;color:#d4d6da}
+label.f input[type=range],label.f select{width:100%}
+select,input[type=number]{font:inherit;font-size:16px;background:#1d2024;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px}
+.row{display:flex;align-items:center;gap:8px}
+.hint{color:var(--mute);font-size:12px}
+#out video{width:100%;border-radius:10px;margin-top:8px;background:#000}
+#prog{height:6px;background:#2a2d32;border-radius:3px;overflow:hidden;margin:8px 0}
+#prog div{height:100%;width:0;background:#fff}
+.msg{background:#2a1a1a;border:1px solid #5a2a2a;border-radius:8px;padding:10px;font-size:13px;display:none}
+@media(max-width:900px){header{padding:10px 12px}header .hint{display:none}main{grid-template-columns:1fr;height:auto}aside.l,aside.r{border:0}section{order:-1;padding:8px}.stage{height:auto;width:100%;max-width:440px;max-height:76svh}.bar{gap:6px}button,.btn{padding:0 14px}#rec{min-width:120px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header><h1>ResumeForge Recorder</h1><span class="hint">Mino-style edit · teleprompter</span><span class="st" id="camst">Camera off</span></header>
+<main>
+<aside class="l">
+  <h2>Scripts (posting order)</h2>
+  <div id="scripts"></div>
+  <h2>Lines in this script</h2>
+  <div id="lines"></div>
+  <p class="hint">Record lines in any order. The edit always runs them in script order.</p>
+</aside>
+<section>
+  <div class="msg" id="msg"></div>
+  <select id="scriptSel" aria-label="Choose script" style="width:100%;max-width:440px"></select>
+  <div class="stage" id="stage">
+    <video id="cam" autoplay muted playsinline class="mir"></video>
+    <video id="playback" playsinline style="display:none"></video>
+    <canvas id="cv" width="1080" height="1920" style="display:none"></canvas>
+    <div class="guide" id="g1" style="top:9%;height:28%"></div>
+    <div id="tp"></div>
+    <div id="cd"></div>
+    <div id="recdot">REC <span id="rect">0.0s</span></div>
+  </div>
+  <div class="bar">
+    <button id="start">Turn on camera</button>
+    <button id="flip" title="Switch front / back camera">Flip</button>
+    <button id="prev" title="Previous line (Left arrow)">Prev</button>
+    <button id="rec" disabled>Record line</button>
+    <button id="next" title="Next line (Right arrow)">Next</button>
+  </div>
+  <div class="bar">
+    <button id="play" disabled>Play take</button>
+    <label class="btn">Upload take<input type="file" id="upl" accept="video/*" hidden></label>
+  </div>
+  <p class="hint">Keep the screen on and this page open while it edits. Space = record / stop · Left/Right = change line · keep your face below the dashed box (cards go there) · keep this tab visible while editing</p>
+</section>
+<aside class="r">
+  <h2>Teleprompter</h2>
+  <label class="f">Text size <input type="range" id="fs" min="18" max="54" value="30"></label>
+  <label class="f row"><input type="checkbox" id="mirror" checked> Mirror camera preview</label>
+  <label class="f row"><input type="checkbox" id="pace" checked> Pacing highlight while recording</label>
+  <label class="f">Pacing speed: <span id="wpmv">150</span> words/min <input type="range" id="wpm" min="90" max="220" value="150"></label>
+  <label class="f row"><input type="checkbox" id="cdOn" checked> 3-second countdown</label>
+  <label class="f row"><input type="checkbox" id="auto" checked> Jump to next unrecorded line after a take</label>
+  <h2>Devices</h2>
+  <label class="f">Camera <select id="camSel"></select></label>
+  <label class="f">Microphone <select id="micSel"></select></label>
+  <h2>Edit (Mino Lee style)</h2>
+  <label class="f">Cut pauses longer than <span id="gapv">0.45</span>s <input type="range" id="gap" min="0.25" max="1.2" step="0.05" value="0.45"></label>
+  <label class="f row"><input type="checkbox" id="cards" checked> White info cards at the top</label>
+  <label class="f row"><input type="checkbox" id="caps" checked> Small spoken captions</label>
+  <label class="f">Background music (optional) <input type="file" id="music" accept="audio/*"></label>
+  <label class="f">Music volume <input type="range" id="mvol" min="0" max="0.4" step="0.01" value="0.10"></label>
+  <button id="render" style="width:100%;justify-content:center">Edit and export this script</button>
+  <div id="prog"><div></div></div>
+  <div class="hint" id="rstat"></div>
+  <div id="out"></div>
+</aside>
+</main>
+<script>
+{
+/* ---------- SCRIPTS (from the 30-day plan; order inside each script is fixed) ---------- */
+const SCRIPTS=[
+{id:'s1',name:'Script 1 · 4 masalah resume',day:'Day 1 · Mon 30 Nov · TOFU',lines:[
+ {say:'Resume anda tak pernah dapat panggilan? Biasanya sebab salah satu daripada 4 masalah ni.',head:'4 masalah resume yang buat HR skip anda'},
+ {say:'Satu: tak tahu nak tulis apa sebab tiada pengalaman. Projek tahun akhir, latihan industri dan aktiviti persatuan semuanya dikira pengalaman.',card:{t:'1. Tiada pengalaman?',s:'Semua ini dikira pengalaman',items:['Projek tahun akhir','Latihan industri','Aktiviti persatuan']}},
+ {say:'Dua: terlalu panjang. Fresh grad, satu muka surat dah cukup.',card:{t:'2. Terlalu panjang',pair:[['Ramai hantar','3 muka surat'],['Fresh grad','1 muka surat cukup']]}},
+ {say:'Tiga: senarai tugas saja. HR nak tahu hasil kerja anda. Guna nombor, peratus, atau masa yang dijimatkan.',card:{t:'3. Tugas saja, tiada hasil',s:'HR nak tahu hasilnya',items:['Nombor','Peratus','Masa yang dijimatkan']}},
+ {say:'Empat: satu resume untuk semua kerja. Setiap iklan minta kemahiran lain, jadi resume pun kena ikut.',card:{t:'4. Satu resume untuk semua kerja',s:'Setiap iklan minta kemahiran lain'}},
+ {say:'Masalah anda yang mana? Komen di bawah. Saya jawab setiap satu dalam video seterusnya.',card:{t:'Masalah anda yang mana?',s:'Komen di bawah'}}]},
+{id:'s3',name:'Script 3 · Cara hurai pengalaman kerja',day:'Day 3 · Wed 2 Dec · TOFU',lines:[
+ {say:'Kalau pengalaman kerja anda ditulis macam ni, HR baca 3 saat dan terus skip.',head:'HR skip ayat ni dalam 3 saat',card:{t:'Ayat yang ramai tulis',pair:[['Pengalaman kerja','Bertanggungjawab menguruskan media sosial']]}},
+ {say:'Ayat ni cuma cerita tugas. Ratusan calon lain tulis ayat yang sama.',card:{t:'Cuma cerita tugas',s:'Ratusan calon tulis ayat yang sama'}},
+ {say:'Guna formula ni: kata kerja, apa yang anda buat, dan hasilnya.',card:{t:'Formula',items:['Kata kerja','Apa yang anda buat','Hasilnya']}},
+ {say:'Contoh: Mengurus 3 akaun media sosial syarikat dan menaikkan pengikut Instagram dari 2,000 ke 9,500 dalam 6 bulan.',card:{t:'Sebelum vs selepas',pair:[['Sebelum','Bertanggungjawab menguruskan media sosial'],['Selepas (contoh)','Mengurus 3 akaun media sosial dan menaikkan pengikut Instagram dari 2,000 ke 9,500 dalam 6 bulan']]}},
+ {say:'Tiada nombor? Guna skala. Berapa orang, berapa projek, berapa kerap. Contoh: Melatih 4 pekerja baharu setiap suku tahun.',card:{t:'Tiada nombor? Guna skala',items:['Berapa orang','Berapa projek','Berapa kerap'],f:'Contoh: Melatih 4 pekerja baharu setiap suku tahun'}},
+ {say:'Ada 10 bullet nak tulis semula? Tampal iklan kerja dalam ResumeForge, dia cadangkan ayat ikut bahasa iklan. Nombornya, anda yang isi.',card:{t:'ResumeForge: Tailor',s:'Tampal iklan, dapat cadangan ayat',f:'Nombor tetap anda yang isi'},note:'Later: overlay a 4-second screen-record of Tailor'},
+ {say:'Save video ni sebelum anda kemas kini resume.',card:{t:'Save video ni',s:'Sebelum anda kemas kini resume'}}]},
+{id:'s5',name:'Script 5 · Jangan guna 1 resume',day:'Day 5 · Fri 4 Dec · MOFU',lines:[
+ {say:'Hantar resume yang sama ke 50 syarikat? Itu antara sebab tak ada yang panggil.',head:'1 resume. 50 permohonan. 0 panggilan.'},
+ {say:'Setiap iklan kerja guna kata kunci lain. Sistem ATS dan HR cari kata kunci tu dulu.',card:{t:'Setiap iklan, kata kunci lain',s:'ATS dan HR cari kata kunci dulu'}},
+ {say:'Tapi tulis semula resume untuk setiap kerja boleh ambil masa sejam. Ini cara saya buat dalam seminit.',card:{t:'Tulis semula setiap kali?',pair:[['Manual','Lebih kurang sejam setiap kerja'],['ResumeForge','Lebih kurang seminit']]}},
+ {say:'Tampal iklan kerja. ResumeForge tulis semula ringkasan, bullet dan kemahiran supaya ikut bahasa iklan tu.',card:{t:'Tampal iklan kerja',items:['Ringkasan','Bullet','Kemahiran'],f:'Ditulis semula ikut bahasa iklan'},note:'Later: overlay screen-record of the Tailor feature'},
+ {say:'Lepas tu semak dengan ATS Checker. Terus nampak apa yang lulus dan apa yang perlu dibaiki.',card:{t:'ATS Checker',s:'Apa yang lulus, apa yang perlu dibaiki'},note:'Later: overlay the real ATS Checker result'},
+ {say:'Setiap versi disimpan dengan iklannya. Bila dipanggil interview, anda tahu resume mana yang anda hantar.',card:{t:'Setiap versi disimpan',s:'Bersama iklan kerjanya'}},
+ {say:'Pelan percuma cukup untuk lebih kurang 10 resume disesuaikan sebulan. Link di bio.',card:{t:'Cuba percuma',s:'Lebih kurang 10 resume disesuaikan sebulan',f:'Link di bio'}}]},
+{id:'s2',name:'Script 2 · Resume fresh grad Engineering',day:'Day 6 · Sat 5 Dec · TOFU',lines:[
+ {say:'Fresh grad engineering, tiada pengalaman kerja? Ini susunan resume yang saya akan guna.',head:'Resume fresh grad engineering tanpa pengalaman'},
+ {say:'Atas sekali: nama, telefon, emel dan LinkedIn. Nombor IC dan alamat penuh tak perlu.',card:{t:'1. Maklumat diri',items:['Nama, telefon, emel','LinkedIn'],f:'Tak perlu: nombor IC, alamat penuh'}},
+ {say:'Kemudian ringkasan dua baris. Contoh: Graduan Kejuruteraan Mekanikal dengan 6 bulan latihan industri dalam penyelenggaraan loji.',card:{t:'2. Ringkasan 2 baris',pair:[['Contoh','Graduan Kejuruteraan Mekanikal dengan 6 bulan latihan industri dalam penyelenggaraan loji']]}},
+ {say:'Yang paling penting untuk fresh grad: Projek Tahun Akhir. Tulis masalahnya, apa yang anda buat, dan hasilnya.',card:{t:'3. Projek Tahun Akhir',s:'Paling penting untuk fresh grad',items:['Masalah','Apa yang anda buat','Hasilnya']}},
+ {say:'Lepas tu latihan industri. Guna nombor kalau ada: berapa mesin, berapa laporan, berapa minggu.',card:{t:'4. Latihan industri',s:'Guna nombor kalau ada',items:['Berapa mesin','Berapa laporan','Berapa minggu']}},
+ {say:'Akhir sekali, kemahiran teknikal yang disebut dalam iklan kerja: AutoCAD, SolidWorks, MATLAB, dan sijil yang berkaitan.',card:{t:'5. Kemahiran teknikal',s:'Ikut iklan kerja',items:['AutoCAD','SolidWorks','MATLAB','Sijil berkaitan']}},
+ {say:'Bidang lain? Komen bidang anda. Video seterusnya untuk anda.',card:{t:'Bidang anda apa?',s:'Komen, video seterusnya untuk anda'}}]},
+{id:'s4',name:'Script 4 · Interview esok',day:'Day 8 · Mon 7 Dec · TOFU',lines:[
+ {say:'Interview esok? 5 benda ni kena siap malam ni.',head:'Interview esok? Siapkan 5 benda ni malam ini'},
+ {say:'Satu: baca semula iklan kerja. Tanda 3 kemahiran yang paling banyak disebut, dan sediakan satu contoh untuk setiap satu.',card:{t:'1. Baca semula iklan kerja',items:['Tanda 3 kemahiran utama','1 contoh untuk setiap satu']}},
+ {say:"Dua: siapkan jawapan 'ceritakan tentang diri anda'. 60 saat: siapa anda, apa yang anda dah buat, kenapa jawatan ni.",card:{t:'2. Ceritakan tentang diri anda',s:'Dalam 60 saat',items:['Siapa anda','Apa yang anda dah buat','Kenapa jawatan ni']}},
+ {say:'Tiga: cari 2 benda tentang syarikat. Produk utama dan berita terbaru mereka.',card:{t:'3. Kaji syarikat',items:['Produk utama','Berita terbaru']}},
+ {say:'Empat: sediakan 2 soalan untuk HR. Contoh: Macam mana prestasi dinilai dalam 3 bulan pertama?',card:{t:'4. Sediakan 2 soalan',pair:[['Contoh','Macam mana prestasi dinilai dalam 3 bulan pertama?']]}},
+ {say:'Lima: semak lokasi dan masa perjalanan. Interview online? Test kamera dan link malam ni juga.',card:{t:'5. Lokasi dan teknologi',items:['Semak masa perjalanan','Online: test kamera dan link']}},
+ {say:'Save untuk malam sebelum interview. Follow untuk siri interview minggu ni.',card:{t:'Save untuk malam sebelum interview',s:'Follow untuk siri interview'}}]}
+];
+
+/* ---------- helpers ---------- */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const takes={}; // key -> {blob}
+let facing='user',counting=false,cur={s:0,l:0}, stream=null, rec=null, chunks=[], recT0=0, recTimer=null, paceTimer=null, ac=null;
+const key=(s,l)=>SCRIPTS[s].id+':'+l;
+const msg=t=>{const m=$('msg');m.textContent=t;m.style.display=t?'block':'none'};
+const getAC=()=>ac||(ac=new (window.AudioContext||window.webkitAudioContext)());
+const pickMime=()=>['video/mp4;codecs=avc1,mp4a.40.2','video/mp4;codecs=avc1.640028,opus','video/mp4;codecs=avc1','video/mp4;codecs=avc3,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm'].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m))||'';
+
+/* ---------- settings ---------- */
+const SET=['fs','mirror','pace','wpm','cdOn','auto','gap','cards','caps','mvol'];
+try{const s=JSON.parse(localStorage.getItem('rfrec')||'{}');SET.forEach(k=>{if(s[k]!==undefined){const el=$(k);el.type==='checkbox'?el.checked=s[k]:el.value=s[k]}})}catch(e){}
+const saveSet=()=>{try{const s={};SET.forEach(k=>{const el=$(k);s[k]=el.type==='checkbox'?el.checked:el.value});localStorage.setItem('rfrec',JSON.stringify(s))}catch(e){}};
+SET.forEach(k=>$(k).addEventListener('input',()=>{saveSet();applySet()}));
+function applySet(){$('tp').style.fontSize=$('fs').value+'px';$('cam').classList.toggle('mir',$('mirror').checked);$('wpmv').textContent=$('wpm').value;$('gapv').textContent=(+$('gap').value).toFixed(2)}
+
+/* ---------- storage (IndexedDB, best effort) ---------- */
+let db=null;
+function idb(){return new Promise(res=>{try{const r=indexedDB.open('rf-recorder',1);r.onupgradeneeded=()=>r.result.createObjectStore('takes');r.onsuccess=()=>res(r.result);r.onerror=()=>res(null)}catch(e){res(null)}})}
+function dbPut(k,v){try{if(db)db.transaction('takes','readwrite').objectStore('takes').put(v,k)}catch(e){}}
+function dbLoad(){return new Promise(res=>{try{if(!db)return res();const st=db.transaction('takes').objectStore('takes');const kr=st.getAllKeys(),vr=st.getAll();vr.onsuccess=()=>{kr.result.forEach((k,i)=>takes[k]=vr.result[i]);res()};vr.onerror=()=>res()}catch(e){res()}})}
+
+/* ---------- UI ---------- */
+function renderLists(){
+  $('scripts').innerHTML=SCRIPTS.map((s,i)=>{const n=s.lines.filter((_,j)=>takes[key(i,j)]).length;
+    return `<button class="sc ${i===cur.s?'on':''}" data-s="${i}"><b>${esc(s.name)}</b><small>${esc(s.day)} · ${n}/${s.lines.length} recorded</small></button>`}).join('');
+  const s=SCRIPTS[cur.s];
+  $('lines').innerHTML=s.lines.map((l,j)=>`<div class="ln ${j===cur.l?'on':''} ${takes[key(cur.s,j)]?'done':''}" data-l="${j}" tabindex="0"><i>${takes[key(cur.s,j)]?'✓':j+1}</i><span>${esc(l.say)}</span></div>`).join('');
+  $('scriptSel').innerHTML=SCRIPTS.map((s,i)=>`<option value="${i}" ${i===cur.s?'selected':''}>${esc(s.name)} · line ${i===cur.s?cur.l+1:1}/${s.lines.length}</option>`).join('');
+  $('play').disabled=!takes[key(cur.s,cur.l)];
+  renderTP();
+}
+function renderTP(prog){
+  const s=SCRIPTS[cur.s],l=s.lines[cur.l],nx=s.lines[cur.l+1];
+  const words=l.say.split(/\s+/);const k=prog==null?words.length:prog;
+  $('tp').innerHTML=`<div class="now">${words.map((w,i)=>`<span class="${prog!=null&&i>=k?'dim':''}">${esc(w)}</span>`).join(' ')}</div>`+
+   (l.note?`<div class="note">${esc(l.note)}</div>`:'')+
+   `<div class="nx">${nx?'Next: '+esc(nx.say):'Last line of this script'}</div>`;
+}
+$('scripts').addEventListener('click',e=>{const b=e.target.closest('.sc');if(!b||rec)return;cur={s:+b.dataset.s,l:0};renderLists()});
+$('lines').addEventListener('click',e=>{const b=e.target.closest('.ln');if(!b||rec)return;cur.l=+b.dataset.l;renderLists()});
+$('scriptSel').onchange=e=>{if(rec)return;cur={s:+e.target.value,l:0};renderLists()};
+$('prev').onclick=()=>{if(rec)return;cur.l=Math.max(0,cur.l-1);renderLists()};
+$('next').onclick=()=>{if(rec)return;cur.l=Math.min(SCRIPTS[cur.s].lines.length-1,cur.l+1);renderLists()};
+
+/* ---------- camera ---------- */
+async function startCam(){
+  msg('');
+  try{
+    if(stream)stream.getTracks().forEach(t=>t.stop());
+    const cv=$('camSel').value,mv=$('micSel').value;
+    const mob=/iPhone|iPad|Android/i.test(navigator.userAgent);
+    const dims=mob?{width:{ideal:1080},height:{ideal:1920}}:{width:{ideal:1920},height:{ideal:1080}};
+    stream=await navigator.mediaDevices.getUserMedia({
+      video:cv?{deviceId:{exact:cv},...dims}:{facingMode:facing,...dims},
+      audio:mv?{deviceId:{exact:mv},echoCancellation:true,noiseSuppression:true}:{echoCancellation:true,noiseSuppression:true}});
+    $('cam').srcObject=stream;$('cam').style.display='block';$('playback').style.display='none';
+    const vt=stream.getVideoTracks()[0].getSettings();$('camst').textContent=`Camera on · ${vt.width}×${vt.height}`;
+    $('rec').disabled=false;$('start').textContent='Restart camera';
+    const devs=await navigator.mediaDevices.enumerateDevices();
+    const fill=(sel,kind,curId)=>{sel.innerHTML=devs.filter(d=>d.kind===kind).map((d,i)=>`<option value="${esc(d.deviceId)}" ${d.deviceId===curId?'selected':''}>${esc(d.label||kind+' '+(i+1))}</option>`).join('')};
+    fill($('camSel'),'videoinput',stream.getVideoTracks()[0].getSettings().deviceId);$('camSel').insertAdjacentHTML('afterbegin','<option value="">Automatic</option>');
+    fill($('micSel'),'audioinput',stream.getAudioTracks()[0]?.getSettings().deviceId);
+  }catch(e){msg('Camera or microphone blocked: '+e.message+'. Open this file in Chrome and allow camera and microphone. You can still upload takes recorded on your phone.')}
+}
+$('start').onclick=startCam;
+$('flip').onclick=()=>{facing=facing==='user'?'environment':'user';$('camSel').value='';$('mirror').checked=facing==='user';applySet();startCam()};
+$('camSel').onchange=startCam;
+$('camSel').insertAdjacentHTML('afterbegin','<option value="">Automatic</option>');$('micSel').onchange=startCam;
+
+/* ---------- recording ---------- */
+function countdown(){return new Promise(res=>{if(!$('cdOn').checked)return res();const c=$('cd');let n=3;c.style.display='grid';c.textContent=n;const t=setInterval(()=>{n--;if(n<=0){clearInterval(t);c.style.display='none';res()}else c.textContent=n},800)})}
+async function toggleRec(){
+  if(!stream)return;
+  if(rec){rec.stop();return}
+  if(counting)return;counting=true;$('rec').disabled=true;await countdown();$('rec').disabled=false;counting=false;
+  chunks=[];const mime=pickMime();
+  rec=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:8e6}:{});
+  rec.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+  rec.onstop=()=>{
+    const blob=new Blob(chunks,{type:rec.mimeType||'video/webm'});const k=key(cur.s,cur.l);
+    takes[k]={blob,at:Date.now()};dbPut(k,takes[k]);rec=null;
+    $('rec').textContent='Record line';$('rec').classList.remove('live');$('recdot').style.display='none';
+    clearInterval(recTimer);clearInterval(paceTimer);
+    if($('auto').checked){const s=SCRIPTS[cur.s];const nx=s.lines.findIndex((_,j)=>!takes[key(cur.s,j)]);if(nx>=0)cur.l=nx}
+    renderLists();
+  };
+  rec.start(250);recT0=performance.now();
+  $('rec').textContent='Stop';$('rec').classList.add('live');$('recdot').style.display='flex';
+  recTimer=setInterval(()=>$('rect').textContent=((performance.now()-recT0)/1000).toFixed(1)+'s',100);
+  if($('pace').checked){const n=SCRIPTS[cur.s].lines[cur.l].say.split(/\s+/).length;const per=60000/+$('wpm').value;let i=0;renderTP(0);
+    paceTimer=setInterval(()=>{i++;renderTP(Math.min(i,n));if(i>=n)clearInterval(paceTimer)},per)}
+}
+$('rec').onclick=toggleRec;
+document.addEventListener('keydown',e=>{
+  if(e.target.matches('input,select'))return;
+  if(e.code==='Space'){e.preventDefault();if(document.activeElement)document.activeElement.blur();toggleRec()}
+  if(e.code==='ArrowRight')$('next').click();
+  if(e.code==='ArrowLeft')$('prev').click();
+});
+$('play').onclick=()=>{const t=takes[key(cur.s,cur.l)];if(!t)return;const p=$('playback');p.src=URL.createObjectURL(t.blob);p.style.display='block';p.controls=true;p.muted=false;p.play();
+  p.onended=()=>{p.style.display='none'}};
+$('upl').onchange=e=>{const f=e.target.files[0];if(!f)return;const k=key(cur.s,cur.l);takes[k]={blob:f,at:Date.now()};dbPut(k,takes[k]);e.target.value='';
+  if($('auto').checked){const nx=SCRIPTS[cur.s].lines.findIndex((_,j)=>!takes[key(cur.s,j)]);if(nx>=0)cur.l=nx}renderLists()};
+
+/* ---------- edit: silence analysis ---------- */
+async function speechSegs(blob,gapMax){
+  const buf=await getAC().decodeAudioData(await blob.arrayBuffer());
+  const d=buf.getChannelData(0),sr=buf.sampleRate,win=Math.round(sr*0.02),n=Math.floor(d.length/win);
+  const rms=new Float32Array(n);
+  for(let i=0;i<n;i++){let s=0;for(let j=i*win;j<(i+1)*win;j++)s+=d[j]*d[j];rms[i]=Math.sqrt(s/win)}
+  const so=Array.from(rms).sort((a,b)=>a-b);const floor=so[Math.floor(n*0.2)]||0,peak=so[Math.floor(n*0.98)]||0;
+  const thr=Math.max(floor*3,peak*0.12,0.004);
+  let segs=[],st=-1,quiet=0;const gapW=Math.round(gapMax/0.02);
+  for(let i=0;i<n;i++){
+    if(rms[i]>thr){if(st<0)st=i;quiet=0}
+    else if(st>=0){quiet++;if(quiet>gapW){segs.push([st,i-quiet]);st=-1;quiet=0}}
+  }
+  if(st>=0)segs.push([st,n-1-quiet]);
+  segs=segs.filter(([a,b])=>b-a>=4).map(([a,b])=>[Math.max(0,a*0.02-0.10),Math.min(buf.duration,(b+1)*0.02+0.18)]);
+  const m=[];segs.forEach(s=>{if(m.length&&s[0]<=m[m.length-1][1])m[m.length-1][1]=s[1];else m.push(s)});
+  return m.length?m:[[0,buf.duration]];
+}
+
+/* ---------- edit: drawing ---------- */
+const W=1080,H=1920;
+function wrap(ctx,text,maxW){const out=[];let line='';for(const w of text.split(' ')){const t=line?line+' '+w:w;if(ctx.measureText(t).width>maxW&&line){out.push(line);line=w}else line=t}if(line)out.push(line);return out}
+function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+function cardLayout(ctx,c){
+  const X=90,IW=W-2*X-72;const ops=[];let y=44;
+  ctx.font='800 54px Inter';wrap(ctx,c.t,IW).forEach(t=>{ops.push(['800 54px Inter','#111',t,y+48]);y+=64});
+  if(c.s){ctx.font='700 38px Inter';wrap(ctx,c.s,IW).forEach(t=>{ops.push(['700 38px Inter','#e5402f',t,y+36]);y+=48})}
+  if(c.items){y+=14;c.items.forEach(it=>{ops.push(['dot',null,null,y+22]);ops.push(['500 38px Inter','#1a1a1a',it,y+36,44]);y+=56})}
+  if(c.pair){y+=16;c.pair.forEach(([lab,txt],i)=>{ctx.font='600 36px Inter';const ls=wrap(ctx,txt,IW-40);const h=58+ls.length*46;
+    ops.push(['box',i===c.pair.length-1&&c.pair.length>1?'#111':'#f1f1ef',null,y,h]);const dark=i===c.pair.length-1&&c.pair.length>1;
+    ops.push(['600 26px Inter',dark?'#bbb':'#777',lab,y+40,20]);ls.forEach((t,k)=>ops.push(['600 36px Inter',dark?'#fff':'#111',t,y+88+k*46,20]));y+=h+14})}
+  if(c.f){y+=10;ctx.font='500 28px Inter';wrap(ctx,c.f,IW).forEach(t=>{ops.push(['500 28px Inter','#777',t,y+28]);y+=38})}
+  return {ops,h:y+36,X,IW};
+}
+function drawCard(ctx,c,a){
+  const L=cardLayout(ctx,c),top=200+(1-a)*24;ctx.save();ctx.globalAlpha=a;
+  ctx.shadowColor='rgba(0,0,0,.25)';ctx.shadowBlur=30;ctx.fillStyle='#fff';rr(ctx,L.X-36,top,L.IW+72,L.h,14);ctx.fill();ctx.shadowBlur=0;
+  for(const o of L.ops){const [f,col,t,y,ind]=o;
+    if(f==='dot'){ctx.fillStyle='#111';ctx.fillRect(L.X,top+y,14,14);continue}
+    if(f==='box'){ctx.fillStyle=col;rr(ctx,L.X,top+y,L.IW,ind,10);ctx.fill();continue}
+    ctx.font=f;ctx.fillStyle=col;ctx.textAlign='left';ctx.fillText(t,L.X+(ind||0),top+y)}
+  ctx.restore();return top+L.h;
+}
+function drawHead(ctx,t,y){ctx.save();ctx.font='700 66px Inter';ctx.textAlign='center';ctx.fillStyle='#fff';ctx.shadowColor='rgba(0,0,0,.55)';ctx.shadowBlur=14;
+  wrap(ctx,t,W-160).forEach((l,i)=>ctx.fillText(l,W/2,y+i*78));ctx.restore()}
+function drawCap(ctx,t){ctx.save();ctx.font='500 56px Inter';ctx.textAlign='center';ctx.fillStyle='#fff';ctx.shadowColor='rgba(0,0,0,.6)';ctx.shadowBlur=10;ctx.fillText(t,W/2,H*0.71);ctx.restore()}
+function capChunks(say,dur){
+  const raw=say.split(/\s+/),wt=raw.map(w=>w.length+2),tot=wt.reduce((a,b)=>a+b,0);let acc=0;
+  const words=raw.map((w,i)=>{const t=acc/tot*dur;acc+=wt[i];return {w:w.replace(/[.,:;!"]/g,''),t,brk:/[.,:;?!]$/.test(w)}});
+  const ch=[];let c=null;words.forEach(o=>{if(!c||c.ws.length>=3){c={ws:[],t:o.t};ch.push(c)}c.ws.push(o.w);if(o.brk)c=null});
+  ch.forEach((c,i)=>{c.text=c.ws.join(' ');c.end=ch[i+1]?ch[i+1].t:dur});return ch;
+}
+function drawCover(ctx,v){const vw=v.videoWidth,vh=v.videoHeight;if(!vw)return;const s=Math.max(W/vw,H/vh),dw=vw*s,dh=vh*s;ctx.drawImage(v,(W-dw)/2,(H-dh)/2,dw,dh)}
+
+/* ---------- edit: render ---------- */
+const srtTime=t=>{const ms=Math.round(t*1000),h=Math.floor(ms/3600000),m=Math.floor(ms/60000)%60,s=Math.floor(ms/1000)%60;return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')},${String(ms%1000).padStart(3,'0')}`};
+let rendering=false;
+async function renderScript(){
+  if(rendering||rec)return;const si=cur.s,S=SCRIPTS[si];
+  const list=S.lines.map((l,j)=>({l,t:takes[key(si,j)]})).filter(o=>o.t);
+  if(!list.length){$('rstat').textContent='Record at least one line first.';return}
+  const A=getAC();A.resume();rendering=true;$('render').disabled=true;await document.fonts.load('800 54px Inter');await document.fonts.load('500 56px Inter');
+  await A.resume();const gap=+$('gap').value;
+  $('rstat').textContent='Finding pauses to cut…';
+  for(const o of list){try{o.segs=await speechSegs(o.t.blob,gap)}catch(e){o.segs=null}}
+  const cv=$('cv'),ctx=cv.getContext('2d');cv.style.display='block';$('cam').style.display='none';$('tp').style.display='none';$('g1').style.display='none';
+  const dest=A.createMediaStreamDestination();
+  let music=null;const mf=$('music').files[0];
+  if(mf){music=new Audio(URL.createObjectURL(mf));music.loop=true;const ms=A.createMediaElementSource(music),mg=A.createGain();mg.gain.value=+$('mvol').value;ms.connect(mg);mg.connect(dest)}
+  const out=new MediaStream([...cv.captureStream(30).getVideoTracks(),...dest.stream.getAudioTracks()]);
+  const mime=pickMime();const R=new MediaRecorder(out,mime?{mimeType:mime,videoBitsPerSecond:10e6}:{});const parts=[];R.ondataavailable=e=>e.data.size&&parts.push(e.data);
+  const resume=()=>{if(R.state==='inactive')R.start(250);else if(R.state==='paused')R.resume();if(music&&music.paused)music.play().catch(()=>{})};
+  const pause=()=>{if(R.state==='recording')R.pause();if(music)music.pause()};
+  let gOff=0,srt=[],n=1;
+  for(let i=0;i<list.length;i++){
+    const o=list[i];$('rstat').textContent=`Editing line ${i+1} of ${list.length}…`;$('prog').firstChild.style.width=(i/list.length*100)+'%';
+    const v=document.createElement('video');v.playsInline=true;v.setAttribute('playsinline','');v.preload='auto';v.src=URL.createObjectURL(o.t.blob);
+    v.style.cssText='position:fixed;width:2px;height:2px;opacity:0;pointer-events:none;left:0;top:0';document.body.appendChild(v);
+    const src=A.createMediaElementSource(v),g=A.createGain();g.gain.value=0;src.connect(g);g.connect(dest);
+    let segs=o.segs;if(!segs){const d=isFinite(v.duration)?v.duration:30;segs=[[0,d]]}
+    const act=segs.reduce((a,[x,y])=>a+(y-x),0),caps=capChunks(o.l.say,act);
+    caps.forEach(c=>srt.push(`${n++}\n${srtTime(gOff+c.t)} --> ${srtTime(gOff+c.end)}\n${c.text}\n`));
+    await new Promise(done=>{
+      let k=0,fin=false;const end=()=>{if(fin)return;fin=true;pause();g.gain.value=0;v.pause();src.disconnect();v.remove();done()};
+      v.onended=end;v.onerror=end;v.playbackRate=4;v.play().catch(end);
+      const tick=()=>{if(fin)return;const t=v.currentTime;
+        while(k<segs.length&&t>=segs[k][1]){k++;pause();g.gain.value=0;v.playbackRate=4}
+        if(k>=segs.length){end();return}
+        if(t>=segs[k][0]&&v.videoWidth){if(v.playbackRate!==1)v.playbackRate=1;g.gain.value=1;resume();
+          let lt=t-segs[k][0];for(let q=0;q<k;q++)lt+=segs[q][1]-segs[q][0];
+          ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);drawCover(ctx,v);
+          let below=330;const a=Math.min(1,lt/0.15);
+          if(o.l.card&&$('cards').checked)below=drawCard(ctx,o.l.card,a)+40;
+          if(o.l.head)drawHead(ctx,o.l.head,o.l.card&&$('cards').checked?below+60:600);
+          if($('caps').checked){const c=caps.find(c=>lt>=c.t&&lt<c.end)||caps[caps.length-1];if(c)drawCap(ctx,c.text)}
+        }
+        requestAnimationFrame(tick)};
+      requestAnimationFrame(tick);
+    });
+    gOff+=act;
+  }
+  const blob=await new Promise(r=>{R.onstop=()=>r(new Blob(parts,{type:R.mimeType||'video/webm'}));if(R.state!=='inactive')R.stop();else r(new Blob(parts))});
+  $('prog').firstChild.style.width='100%';
+  const ext=(R.mimeType||'').includes('mp4')?'mp4':'webm',url=URL.createObjectURL(blob),surl=URL.createObjectURL(new Blob([srt.join('\n')],{type:'text/plain'}));
+  const miss=S.lines.length-list.length;
+  $('out').innerHTML=`<video controls playsinline src="${url}"></video>
+   <p class="row"><button id="share" type="button">Save to Photos / Share</button></p>
+   <p class="row"><a class="btn" href="${url}" download="resumeforge-${S.id}-edited.${ext}">Download video (.${ext})</a></p>
+   <p class="row"><a class="btn" href="${surl}" download="resumeforge-${S.id}.srt">Download captions (.srt)</a></p>`+
+   (ext==='webm'?'<p class="hint">Your browser saved WebM. Instagram and TikTok want MP4: update Chrome, or send me the file and I will convert it.</p>':'')+
+   (miss?`<p class="hint">${miss} line(s) not recorded yet, so they were left out.</p>`:'');
+  const file=new File([blob],`resumeforge-${S.id}-edited.${ext}`,{type:blob.type||'video/mp4'});
+  $('share').onclick=async()=>{try{if(navigator.canShare&&navigator.canShare({files:[file]}))await navigator.share({files:[file]});else $('rstat').textContent='Sharing not supported here: use the Download button.'}catch(e){}};
+  $('rstat').textContent=`Done · ${gOff.toFixed(1)}s after cutting pauses`;
+  cv.style.display='none';$('cam').style.display='block';$('tp').style.display='block';$('g1').style.display='block';
+  rendering=false;$('render').disabled=false;
+}
+$('render').onclick=renderScript;
+
+/* ---------- boot ---------- */
+applySet();
+(async()=>{db=await idb();await dbLoad();renderLists()})();
+}
+</script>
+</body>
+</html>
