@@ -31,10 +31,18 @@ body.guide #g1{display:block}
 .pill{font:600 13px Inter,sans-serif;color:#fff;background:#ffffff22;border:0;border-radius:16px;padding:7px 12px;-webkit-appearance:none;appearance:none}
 select.pill{max-width:58vw;font-size:16px;padding-right:12px}
 #lineno{margin-left:auto;white-space:nowrap}
-#tp{font-weight:600;line-height:1.28;text-shadow:0 1px 3px #000a}
-#tp .dim{color:#ffffff55}
-#tp .nx{color:#ffffffaa;font-weight:500;margin-top:8px;font-size:.6em}
-#tp .note{color:#ffd60a;font-weight:500;font-size:.5em;margin-top:6px}
+#top{height:calc(var(--st) + 60px + 42dvh)}
+#tp{position:fixed;left:0;right:0;top:calc(var(--st) + 52px);height:40dvh;overflow-y:auto;padding:0 22px 0 26px;z-index:11;-webkit-mask-image:linear-gradient(transparent,#000 6%,#000 78%,transparent);mask-image:linear-gradient(transparent,#000 6%,#000 78%,transparent);scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#tp::-webkit-scrollbar{display:none}
+.tl{margin:0 0 .75em;font-weight:600;line-height:1.3;color:#ffffff70;text-shadow:0 1px 3px #000a;transition:color .2s}
+.tl.on{color:#fff}.tl.end{color:#ffffff55;font-size:.7em}
+.tl .note{display:block;color:#ffd60a;font-weight:500;font-size:.55em;margin-top:4px}
+#rmark{position:fixed;left:8px;z-index:12;width:0;height:0;border-top:8px solid transparent;border-bottom:8px solid transparent;border-left:11px solid #ffd60a;transform:translateY(-2px);pointer-events:none}
+#pausehint{position:fixed;z-index:12;left:50%;transform:translateX(-50%);top:calc(var(--st) + 52px + 41dvh);font:600 12px Inter;color:#ffffffb0;display:none}
+body.recording #pausehint{display:block}
+body.paused #rmark{border-left-color:#ff3b30}
+.spd{display:flex;flex-direction:column;align-items:center;gap:2px;font:600 11px Inter;color:#ffffffb0}
+.spd b{font-size:16px;color:#fff}
 body.recording .toprow{visibility:hidden}
 #recdot{position:fixed;z-index:12;left:50%;transform:translateX(-50%);top:calc(var(--st) + 10px);display:none;align-items:center;gap:6px;background:var(--red);padding:4px 10px;border-radius:6px;font:600 14px Inter;font-variant-numeric:tabular-nums}
 #cd{position:fixed;inset:0;z-index:20;display:none;place-items:center;font-size:140px;font-weight:800;text-shadow:0 4px 20px #000}
@@ -49,7 +57,7 @@ body.recording .toprow{visibility:hidden}
 #rec:before{content:"";width:100%;height:100%;border-radius:50%;background:var(--red);transition:all .2s}
 #rec.live:before{width:44%;height:44%;border-radius:8px}
 #rec:disabled{opacity:.5}
-body.recording .side,body.recording .tools{visibility:hidden}
+body.recording .tools,body.recording #flip{visibility:hidden}
 #startOv{position:fixed;inset:0;z-index:25;display:grid;place-items:center;background:#000;padding:30px;text-align:center}
 #startOv p{color:var(--mute);max-width:300px}
 .big{font:700 17px Inter;color:#000;background:#fff;border:0;border-radius:26px;padding:14px 26px}
@@ -70,7 +78,7 @@ h4{font-size:12px;color:var(--mute);font-weight:600;margin:16px 0 8px;text-trans
 .ln.done i{background:var(--ok);border-color:var(--ok);color:#000}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
 .btn,.sheet button.btn{font:600 15px Inter;min-height:44px;padding:0 16px;border-radius:22px;border:0;background:#3a3a3c;color:#fff;display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
-.btn.pri,.sheet button.btn.pri{background:#fff;color:#000}
+.btn.pri{background:#fff;color:#000}
 .btn:disabled{opacity:.4}
 label.f{display:block;margin:12px 0;font-size:14px}
 label.f input[type=range],label.f select{width:100%;margin-top:6px}
@@ -101,25 +109,28 @@ body.editing #edprog{display:block}
     <select id="scriptSel" class="pill" aria-label="Choose script"></select>
     <span class="pill" id="lineno">Line 1</span>
   </div>
-  <div id="tp"></div>
 </div>
+<div id="tp"></div>
+<div id="rmark"></div>
+<div id="pausehint">Tap text to pause</div>
 <div id="recdot"><span id="rect">0:00</span></div>
 <div id="cd"></div>
 <div id="msg"></div>
 
 <div id="bottom">
   <div class="tools">
-    <button data-open="shLines">Lines <span id="donecount"></span></button>
+    <button data-open="shLines">Scripts</button>
     <button data-open="shSet">Settings</button>
     <button data-open="shEdit">Edit &amp; export</button>
   </div>
   <div class="shutter">
     <div class="side l">
-      <button class="round" id="prev" aria-label="Previous line"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <button class="round" id="slower" aria-label="Slower"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><path d="M6 12h12"/></svg></button>
+      <div class="spd">Speed<b id="spdv">5</b></div>
     </div>
     <button id="rec" aria-label="Record line" disabled></button>
     <div class="side r">
-      <button class="round" id="next" aria-label="Next line"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+      <button class="round" id="faster" aria-label="Faster"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><path d="M6 12h12M12 6v12"/></svg></button>
       <button class="round" id="flip" aria-label="Flip camera"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/></svg></button>
     </div>
   </div>
@@ -136,26 +147,23 @@ body.editing #edprog{display:block}
 <div id="scrim"></div>
 
 <div class="sheet" id="shLines">
-  <div class="hd"><h3>Scripts and lines</h3><button class="x">Done</button></div>
-  <h4>Scripts, in posting order</h4>
+  <div class="hd"><h3>Scripts</h3><button class="x">Done</button></div>
+  <h4>In posting order. Each script is one continuous take.</h4>
   <div id="scripts"></div>
-  <h4>Lines in this script (tap one to record it)</h4>
-  <div id="lines"></div>
   <div class="row">
     <button class="btn" id="play" disabled>Play take</button>
     <label class="btn">Upload take<input type="file" id="upl" accept="video/*" hidden></label>
   </div>
-  <p class="hint">Record lines in any order. The edit always puts them in script order.</p>
+  <p class="hint">Recording again replaces the take for that script.</p>
 </div>
 
 <div class="sheet" id="shSet">
   <div class="hd"><h3>Settings</h3><button class="x">Done</button></div>
   <h4>Teleprompter</h4>
-  <label class="f">Text size <input type="range" id="fs" min="16" max="44" value="24"></label>
-  <label class="c"><input type="checkbox" id="pace" checked> Pacing highlight while recording</label>
-  <label class="f">Pacing speed: <span id="wpmv">150</span> words/min <input type="range" id="wpm" min="90" max="220" value="150"></label>
+  <label class="f">Scroll speed: <span id="spdv2">5</span> <input type="range" id="spd" min="1" max="15" value="5"></label>
+  <label class="f">Text size <input type="range" id="fs" min="16" max="44" value="26"></label>
   <label class="c"><input type="checkbox" id="cdOn" checked> 3-second countdown</label>
-  <label class="c"><input type="checkbox" id="auto" checked> Jump to next unrecorded line after a take</label>
+  <p class="hint">While recording: tap the text to pause or resume, use minus and plus to change speed. When paused you can drag the text.</p>
   <label class="c"><input type="checkbox" id="guide" checked> Show card zone (keep your face below it)</label>
   <h4>Camera</h4>
   <label class="c"><input type="checkbox" id="mirror" checked> Mirror preview (the video is saved unmirrored)</label>
@@ -164,6 +172,7 @@ body.editing #edprog{display:block}
   <div class="row"><button class="btn" id="restart">Restart camera</button><span class="hint" id="camst"></span></div>
   <h4>Edit (Mino Lee style)</h4>
   <label class="f">Cut pauses longer than <span id="gapv">0.45</span>s <input type="range" id="gap" min="0.25" max="1.2" step="0.05" value="0.45"></label>
+  <label class="f">Line timing for cards and captions <select id="timing"><option value="scroll">Follow the teleprompter scroll</option><option value="text">Spread by text length</option></select></label>
   <label class="c"><input type="checkbox" id="cards" checked> White info cards at the top</label>
   <label class="c"><input type="checkbox" id="caps" checked> Small spoken captions</label>
   <label class="f">Background music (optional) <input type="file" id="music" accept="audio/*"></label>
@@ -172,7 +181,7 @@ body.editing #edprog{display:block}
 
 <div class="sheet" id="shEdit">
   <div class="hd"><h3>Edit and export</h3><button class="x">Done</button></div>
-  <p class="hint">Cuts the pauses, adds the cards and captions, and joins the lines in script order. Keep the screen on while it runs.</p>
+  <p class="hint">Edits the script chosen at the top: cuts the pauses and adds the cards and captions. Keep the screen on while it runs.</p>
   <button class="btn pri" id="render" style="width:100%">Edit this script</button>
   <div id="prog"><div></div></div>
   <div class="hint" id="rstat"></div>
@@ -180,6 +189,7 @@ body.editing #edprog{display:block}
 </div>
 <script>
 {
+
 
 /* ---------- SCRIPTS (from the 30-day plan; order inside each script is fixed) ---------- */
 const SCRIPTS=[
@@ -227,112 +237,128 @@ const SCRIPTS=[
 /* ---------- helpers ---------- */
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const takes={}; // key -> {blob}
-let facing='user',counting=false,cur={s:0,l:0}, stream=null, rec=null, chunks=[], recT0=0, recTimer=null, paceTimer=null, ac=null;
-const key=(s,l)=>SCRIPTS[s].id+':'+l;
-const msg=t=>{const m=$('msg');m.textContent=t;m.style.display=t?'block':'none'};
+const takes={}; // script id -> {blob, marks}
+let facing='user',counting=false,cur=0,stream=null,rec=null,chunks=[],recT0=0,recTimer=null,ac=null;
+let scrollPos=0,scrolling=false,lastTs=0,marks=[];
+const SID=()=>SCRIPTS[cur].id;
+const msg=t=>{const m=$('msg');m.textContent=t;m.style.display=t?'block':'none';if(t)setTimeout(()=>{if(m.textContent===t)m.style.display='none'},7000)};
 const getAC=()=>ac||(ac=new (window.AudioContext||window.webkitAudioContext)());
-const pickMime=()=>['video/mp4;codecs=avc1,mp4a.40.2','video/mp4;codecs=avc1.640028,opus','video/mp4;codecs=avc1','video/mp4;codecs=avc3,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm'].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m))||'';
+const pickMime=()=>['video/mp4;codecs=avc1,mp4a.40.2','video/mp4;codecs=avc1','video/mp4','video/webm;codecs=vp9,opus','video/webm'].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m))||'';
+const fmt=t=>Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
 
 /* ---------- settings ---------- */
-const SET=['fs','guide','mirror','pace','wpm','cdOn','auto','gap','cards','caps','mvol'];
-try{const s=JSON.parse(localStorage.getItem('rfrec')||'{}');SET.forEach(k=>{if(s[k]!==undefined){const el=$(k);el.type==='checkbox'?el.checked=s[k]:el.value=s[k]}})}catch(e){}
-const saveSet=()=>{try{const s={};SET.forEach(k=>{const el=$(k);s[k]=el.type==='checkbox'?el.checked:el.value});localStorage.setItem('rfrec',JSON.stringify(s))}catch(e){}};
+const SET=['fs','spd','guide','mirror','cdOn','gap','cards','caps','mvol','timing'];
+try{const s=JSON.parse(localStorage.getItem('rfrec2')||'{}');SET.forEach(k=>{if(s[k]!==undefined){const el=$(k);el.type==='checkbox'?el.checked=s[k]:el.value=s[k]}})}catch(e){}
+const saveSet=()=>{try{const s={};SET.forEach(k=>{const el=$(k);s[k]=el.type==='checkbox'?el.checked:el.value});localStorage.setItem('rfrec2',JSON.stringify(s))}catch(e){}};
 SET.forEach(k=>$(k).addEventListener('input',()=>{saveSet();applySet()}));
-function applySet(){document.body.classList.toggle('guide',$('guide').checked);$('tp').style.fontSize=$('fs').value+'px';$('cam').classList.toggle('mir',$('mirror').checked);$('wpmv').textContent=$('wpm').value;$('gapv').textContent=(+$('gap').value).toFixed(2)}
+function applySet(){
+  document.body.classList.toggle('guide',$('guide').checked);
+  $('tp').style.fontSize=$('fs').value+'px';$('cam').classList.toggle('mir',$('mirror').checked);
+  $('spdv').textContent=$('spd').value;$('spdv2').textContent=$('spd').value;$('gapv').textContent=(+$('gap').value).toFixed(2);
+  sizePads();
+}
+const pxps=()=>+$('spd').value*(+$('fs').value)*0.12;
+function setSpeed(d){const e=$('spd');e.value=Math.max(+e.min,Math.min(+e.max,+e.value+d));saveSet();applySet()}
+$('slower').onclick=()=>setSpeed(-1);$('faster').onclick=()=>setSpeed(1);
 
-/* ---------- storage (IndexedDB, best effort) ---------- */
+/* ---------- storage ---------- */
 let db=null;
-function idb(){return new Promise(res=>{try{const r=indexedDB.open('rf-recorder',1);r.onupgradeneeded=()=>r.result.createObjectStore('takes');r.onsuccess=()=>res(r.result);r.onerror=()=>res(null)}catch(e){res(null)}})}
+function idb(){return new Promise(res=>{try{const r=indexedDB.open('rf-recorder2',1);r.onupgradeneeded=()=>r.result.createObjectStore('takes');r.onsuccess=()=>res(r.result);r.onerror=()=>res(null)}catch(e){res(null)}})}
 function dbPut(k,v){try{if(db)db.transaction('takes','readwrite').objectStore('takes').put(v,k)}catch(e){}}
 function dbLoad(){return new Promise(res=>{try{if(!db)return res();const st=db.transaction('takes').objectStore('takes');const kr=st.getAllKeys(),vr=st.getAll();vr.onsuccess=()=>{kr.result.forEach((k,i)=>takes[k]=vr.result[i]);res()};vr.onerror=()=>res()}catch(e){res()}})}
 
-/* ---------- UI ---------- */
+/* ---------- teleprompter ---------- */
+const readY=()=>$('tp').clientHeight*0.18;
+function sizePads(){const p=$('tp').querySelector('.pad'),b=$('tp').querySelector('.padb');if(p){p.style.height=readY()+'px';b.style.height=$('tp').clientHeight*0.8+'px'}$('rmark').style.top=($('tp').getBoundingClientRect().top+readY())+'px'}
+function renderTP(){
+  const L=SCRIPTS[cur].lines;
+  $('tp').innerHTML='<div class="pad"></div>'+L.map((l,i)=>`<p class="tl" data-i="${i}">${esc(l.say)}${l.note?`<span class="note">${esc(l.note)}</span>`:''}</p>`).join('')+'<p class="tl end">End of script. Tap stop.</p><div class="padb"></div>';
+  scrollPos=0;$('tp').scrollTop=0;sizePads();highlight();
+}
+function highlight(){
+  const tp=$('tp'),y=tp.scrollTop+readY()+4;let on=0;
+  tp.querySelectorAll('.tl[data-i]').forEach(p=>{if(p.offsetTop<=y)on=+p.dataset.i});
+  tp.querySelectorAll('.tl[data-i]').forEach(p=>p.classList.toggle('on',+p.dataset.i===on));
+  $('lineno').textContent=`Line ${on+1}/${SCRIPTS[cur].lines.length}`+(takes[SID()]&&!rec?' · recorded':'');
+  return on;
+}
+function loop(ts){
+  const tp=$('tp'),dt=lastTs?Math.min(0.1,(ts-lastTs)/1000):0;lastTs=ts;
+  if(scrolling){scrollPos+=pxps()*dt;const max=tp.scrollHeight-tp.clientHeight;if(scrollPos>=max){scrollPos=max;scrolling=false;setPauseUI()}tp.scrollTop=scrollPos}
+  if(rec){const y=tp.scrollTop+readY()+4,t=(performance.now()-recT0)/1000;
+    tp.querySelectorAll('.tl[data-i]').forEach(p=>{const i=+p.dataset.i;if(marks[i]==null&&p.offsetTop<=y)marks[i]=t})}
+  if(scrolling||rec)highlight();
+  requestAnimationFrame(loop);
+}
+$('tp').addEventListener('scroll',()=>{if(!scrolling){scrollPos=$('tp').scrollTop;highlight()}},{passive:true});
+function setPauseUI(){document.body.classList.toggle('paused',!scrolling&&!!rec);$('pausehint').textContent=scrolling?'Tap text to pause':'Paused · tap text to scroll'}
+$('tp').addEventListener('click',()=>{scrolling=!scrolling;lastTs=0;setPauseUI()});
+
+/* ---------- lists ---------- */
 function renderLists(){
-  $('scripts').innerHTML=SCRIPTS.map((s,i)=>{const n=s.lines.filter((_,j)=>takes[key(i,j)]).length;
-    return `<button class="sc ${i===cur.s?'on':''}" data-s="${i}"><b>${esc(s.name)}</b><small>${esc(s.day)} · ${n}/${s.lines.length} recorded</small></button>`}).join('');
-  const s=SCRIPTS[cur.s];
-  $('lines').innerHTML=s.lines.map((l,j)=>`<div class="ln ${j===cur.l?'on':''} ${takes[key(cur.s,j)]?'done':''}" data-l="${j}" tabindex="0"><i>${takes[key(cur.s,j)]?'✓':j+1}</i><span>${esc(l.say)}</span></div>`).join('');
-  $('scriptSel').innerHTML=SCRIPTS.map((s,i)=>`<option value="${i}" ${i===cur.s?'selected':''}>${esc(s.name.replace(/^Script (\d) · /,'S$1 · '))}</option>`).join('');
-  const done=s.lines.filter((_,j)=>takes[key(cur.s,j)]).length;
-  $('lineno').textContent=`Line ${cur.l+1}/${s.lines.length}`+(takes[key(cur.s,cur.l)]?' · recorded':'');
-  $('donecount').textContent=`${done}/${s.lines.length}`;
-  $('play').disabled=!takes[key(cur.s,cur.l)];
+  $('scripts').innerHTML=SCRIPTS.map((s,i)=>`<button class="sc ${i===cur?'on':''}" data-s="${i}"><b>${esc(s.name)}</b><small>${esc(s.day)} · ${takes[s.id]?'recorded':'not recorded'}</small></button>`).join('');
+  $('scriptSel').innerHTML=SCRIPTS.map((s,i)=>`<option value="${i}" ${i===cur?'selected':''}>${esc(s.name.replace(/^Script (\d) · /,'S$1 · '))}${takes[s.id]?' ✓':''}</option>`).join('');
+  $('play').disabled=!takes[SID()];
   renderTP();
 }
-function renderTP(prog){
-  const s=SCRIPTS[cur.s],l=s.lines[cur.l],nx=s.lines[cur.l+1];
-  const words=l.say.split(/\s+/);const k=prog==null?words.length:prog;
-  $('tp').innerHTML=`<div class="now">${words.map((w,i)=>`<span class="${prog!=null&&i>=k?'dim':''}">${esc(w)}</span>`).join(' ')}</div>`+
-   (l.note?`<div class="note">${esc(l.note)}</div>`:'')+
-   `<div class="nx">${nx?'Next: '+esc(nx.say):'Last line of this script'}</div>`;
-}
-$('scripts').addEventListener('click',e=>{const b=e.target.closest('.sc');if(!b||rec)return;cur={s:+b.dataset.s,l:0};renderLists()});
-$('lines').addEventListener('click',e=>{const b=e.target.closest('.ln');if(!b||rec)return;cur.l=+b.dataset.l;renderLists();closeSheets()});
-$('scriptSel').onchange=e=>{if(rec)return;cur={s:+e.target.value,l:0};renderLists()};
-$('prev').onclick=()=>{if(rec)return;cur.l=Math.max(0,cur.l-1);renderLists()};
-$('next').onclick=()=>{if(rec)return;cur.l=Math.min(SCRIPTS[cur.s].lines.length-1,cur.l+1);renderLists()};
+$('scripts').addEventListener('click',e=>{const b=e.target.closest('.sc');if(!b||rec)return;cur=+b.dataset.s;renderLists();closeSheets()});
+$('scriptSel').onchange=e=>{if(rec)return;cur=+e.target.value;renderLists()};
 
 /* ---------- camera ---------- */
 async function startCam(){
-  msg('');
   try{
     if(stream)stream.getTracks().forEach(t=>t.stop());
-    const cv=$('camSel').value,mv=$('micSel').value;
-    const dims={width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:30}};
+    const cv=$('camSel').value,mv=$('micSel').value,dims={width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:30}};
     stream=await navigator.mediaDevices.getUserMedia({
       video:cv?{deviceId:{exact:cv},...dims}:{facingMode:facing,...dims},
       audio:mv?{deviceId:{exact:mv},echoCancellation:true,noiseSuppression:true}:{echoCancellation:true,noiseSuppression:true}});
-    $('cam').srcObject=stream;$('cam').style.display='block';$('playback').style.display='none';
-    const vt=stream.getVideoTracks()[0].getSettings();$('camst').textContent=`Camera on · ${vt.width}×${vt.height}`;
-    $('rec').disabled=false;$('startOv').style.display='none';
+    $('cam').srcObject=stream;$('rec').disabled=false;$('startOv').style.display='none';
+    const vt=stream.getVideoTracks()[0].getSettings();$('camst').textContent=`${vt.width}×${vt.height}`;
     const devs=await navigator.mediaDevices.enumerateDevices();
-    const fill=(sel,kind,curId)=>{sel.innerHTML=devs.filter(d=>d.kind===kind).map((d,i)=>`<option value="${esc(d.deviceId)}" ${d.deviceId===curId?'selected':''}>${esc(d.label||kind+' '+(i+1))}</option>`).join('')};
-    fill($('camSel'),'videoinput',stream.getVideoTracks()[0].getSettings().deviceId);$('camSel').insertAdjacentHTML('afterbegin','<option value="">Automatic</option>');
-    fill($('micSel'),'audioinput',stream.getAudioTracks()[0]?.getSettings().deviceId);
+    const fill=(sel,kind,curId)=>{sel.innerHTML='<option value="">Automatic</option>'+devs.filter(d=>d.kind===kind).map((d,i)=>`<option value="${esc(d.deviceId)}" ${d.deviceId===curId&&cv?'selected':''}>${esc(d.label||kind+' '+(i+1))}</option>`).join('')};
+    fill($('camSel'),'videoinput',vt.deviceId);fill($('micSel'),'audioinput',stream.getAudioTracks()[0]?.getSettings().deviceId);
+    sizePads();
   }catch(e){$('startOv').style.display='grid';msg('Camera or microphone blocked ('+e.message+'). In Safari tap aA, then Website Settings, and allow Camera and Microphone.')}
 }
-$('start').onclick=startCam;
-$('flip').onclick=()=>{facing=facing==='user'?'environment':'user';$('camSel').value='';$('mirror').checked=facing==='user';applySet();startCam()};
-$('camSel').onchange=startCam;
-$('camSel').insertAdjacentHTML('afterbegin','<option value="">Automatic</option>');$('micSel').onchange=startCam;
+$('start').onclick=startCam;$('restart').onclick=startCam;
+$('flip').onclick=()=>{facing=facing==='user'?'environment':'user';$('camSel').value='';$('mirror').checked=facing==='user';saveSet();applySet();startCam()};
+$('camSel').onchange=startCam;$('micSel').onchange=startCam;
 
-/* ---------- recording ---------- */
+/* ---------- recording: one continuous take per script ---------- */
 function countdown(){return new Promise(res=>{if(!$('cdOn').checked)return res();const c=$('cd');let n=3;c.style.display='grid';c.textContent=n;const t=setInterval(()=>{n--;if(n<=0){clearInterval(t);c.style.display='none';res()}else c.textContent=n},800)})}
 async function toggleRec(){
-  if(!stream)return;
+  if(!stream||counting)return;
   if(rec){rec.stop();return}
-  if(counting)return;counting=true;$('rec').disabled=true;await countdown();$('rec').disabled=false;counting=false;
-  chunks=[];const mime=pickMime();
-  rec=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:8e6}:{});
+  if(takes[SID()]&&!$('rec').dataset.ok){$('rec').dataset.ok='1';msg('This script already has a take. Tap record again to replace it.');setTimeout(()=>delete $('rec').dataset.ok,6000);return}
+  delete $('rec').dataset.ok;
+  scrolling=false;scrollPos=0;$('tp').scrollTop=0;highlight();
+  counting=true;await countdown();counting=false;
+  chunks=[];marks=[];const mime=pickMime();
+  rec=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:10e6}:{});
   rec.ondataavailable=e=>e.data.size&&chunks.push(e.data);
   rec.onstop=()=>{
-    const blob=new Blob(chunks,{type:rec.mimeType||'video/webm'});const k=key(cur.s,cur.l);
-    takes[k]={blob,at:Date.now()};dbPut(k,takes[k]);rec=null;
-    $('rec').classList.remove('live');document.body.classList.remove('recording');$('recdot').style.display='none';
-    clearInterval(recTimer);clearInterval(paceTimer);
-    if($('auto').checked){const s=SCRIPTS[cur.s];const nx=s.lines.findIndex((_,j)=>!takes[key(cur.s,j)]);if(nx>=0)cur.l=nx}
-    renderLists();
+    const blob=new Blob(chunks,{type:rec.mimeType||'video/mp4'});
+    takes[SID()]={blob,marks:marks.slice(),at:Date.now()};dbPut(SID(),takes[SID()]);rec=null;scrolling=false;
+    document.body.classList.remove('recording','paused');clearInterval(recTimer);$('rec').classList.remove('live');
+    renderLists();msg('Saved. Open Edit & export, or record again to replace it.');
   };
-  rec.start(250);recT0=performance.now();
-  $('rec').classList.add('live');document.body.classList.add('recording');$('recdot').style.display='flex';
-  recTimer=setInterval(()=>$('rect').textContent=(t=>Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0'))((performance.now()-recT0)/1000),100);
-  if($('pace').checked){const n=SCRIPTS[cur.s].lines[cur.l].say.split(/\s+/).length;const per=60000/+$('wpm').value;let i=0;renderTP(0);
-    paceTimer=setInterval(()=>{i++;renderTP(Math.min(i,n));if(i>=n)clearInterval(paceTimer)},per)}
+  rec.start(500);recT0=performance.now();marks[0]=0;
+  document.body.classList.add('recording');$('rec').classList.add('live');
+  recTimer=setInterval(()=>$('rect').textContent=fmt((performance.now()-recT0)/1000),250);
+  scrolling=true;lastTs=0;setPauseUI();
 }
 $('rec').onclick=toggleRec;
 document.addEventListener('keydown',e=>{
   if(e.target.matches('input,select'))return;
-  if(e.code==='Space'){e.preventDefault();if(document.activeElement)document.activeElement.blur();toggleRec()}
-  if(e.code==='ArrowRight')$('next').click();
-  if(e.code==='ArrowLeft')$('prev').click();
+  if(e.code==='Space'){e.preventDefault();document.activeElement&&document.activeElement.blur();toggleRec()}
+  if(e.code==='ArrowUp'){e.preventDefault();setSpeed(1)}
+  if(e.code==='ArrowDown'){e.preventDefault();setSpeed(-1)}
+  if(e.code==='KeyP'){scrolling=!scrolling;lastTs=0;setPauseUI()}
 });
-$('play').onclick=()=>{const t=takes[key(cur.s,cur.l)];if(!t)return;const p=$('playback');p.src=URL.createObjectURL(t.blob);p.style.display='block';p.controls=true;p.muted=false;p.play();closeSheets();$('closePb').style.display='block';
+$('play').onclick=()=>{const t=takes[SID()];if(!t)return;const p=$('playback');p.src=URL.createObjectURL(t.blob);p.style.display='block';p.controls=true;p.play();closeSheets();$('closePb').style.display='block';
   p.onended=()=>{p.style.display='none';$('closePb').style.display='none'}};
 $('closePb').onclick=()=>{const p=$('playback');p.pause();p.style.display='none';$('closePb').style.display='none'};
-$('upl').onchange=e=>{const f=e.target.files[0];if(!f)return;const k=key(cur.s,cur.l);takes[k]={blob:f,at:Date.now()};dbPut(k,takes[k]);e.target.value='';
-  if($('auto').checked){const nx=SCRIPTS[cur.s].lines.findIndex((_,j)=>!takes[key(cur.s,j)]);if(nx>=0)cur.l=nx}renderLists()};
-
+$('upl').onchange=e=>{const f=e.target.files[0];if(!f)return;takes[SID()]={blob:f,marks:[],at:Date.now()};dbPut(SID(),takes[SID()]);e.target.value='';renderLists();msg('Video added. Lines will be timed by text length.')};
 /* ---------- edit: silence analysis ---------- */
 async function speechSegs(blob,gapMax){
   const buf=await getAC().decodeAudioData(await blob.arrayBuffer());
@@ -387,66 +413,68 @@ function capChunks(say,dur){
 }
 function drawCover(ctx,v){const vw=v.videoWidth,vh=v.videoHeight;if(!vw)return;const s=Math.max(W/vw,H/vh),dw=vw*s,dh=vh*s;ctx.drawImage(v,(W-dw)/2,(H-dh)/2,dw,dh)}
 
+
 /* ---------- edit: render ---------- */
-const srtTime=t=>{const ms=Math.round(t*1000),h=Math.floor(ms/3600000),m=Math.floor(ms/60000)%60,s=Math.floor(ms/1000)%60;return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')},${String(ms%1000).padStart(3,'0')}`};
+const srtTime=t=>{const ms=Math.max(0,Math.round(t*1000)),h=Math.floor(ms/3600000),m=Math.floor(ms/60000)%60,s=Math.floor(ms/1000)%60;return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')},${String(ms%1000).padStart(3,'0')}`};
+const actBetween=(segs,a,b)=>segs.reduce((s,[x,y])=>s+Math.max(0,Math.min(b,y)-Math.max(a,x)),0);
+function rawAtActive(segs,at){let acc=0;for(const [x,y] of segs){if(acc+(y-x)>=at)return x+(at-acc);acc+=y-x}return segs.length?segs[segs.length-1][1]:0}
 let rendering=false;
 async function renderScript(){
-  if(rendering||rec)return;const si=cur.s,S=SCRIPTS[si];
-  const list=S.lines.map((l,j)=>({l,t:takes[key(si,j)]})).filter(o=>o.t);
-  if(!list.length){$('rstat').textContent='Record at least one line first.';openSheet('shEdit');return}
-  const A=getAC();A.resume();rendering=true;$('render').disabled=true;await document.fonts.load('800 54px Inter');await document.fonts.load('500 56px Inter');
-  await A.resume();const gap=+$('gap').value;
+  if(rendering||rec)return;const S=SCRIPTS[cur],take=takes[S.id];
+  if(!take){$('rstat').textContent='Record this script first.';return}
+  const A=getAC();A.resume();rendering=true;$('render').disabled=true;
+  await document.fonts.load('800 54px Inter');await document.fonts.load('500 56px Inter');await A.resume();
   $('rstat').textContent='Finding pauses to cut…';
-  for(const o of list){try{o.segs=await speechSegs(o.t.blob,gap)}catch(e){o.segs=null}}
-  const cv=$('cv'),ctx=cv.getContext('2d');closeSheets();document.body.classList.add('editing');
-  const dest=A.createMediaStreamDestination();
+  let segs;try{segs=await speechSegs(take.blob,+$('gap').value)}catch(e){segs=null}
+  const v=document.createElement('video');v.playsInline=true;v.setAttribute('playsinline','');v.preload='auto';v.src=URL.createObjectURL(take.blob);
+  v.style.cssText='position:fixed;width:2px;height:2px;opacity:0;pointer-events:none;left:0;top:0';document.body.appendChild(v);
+  if(!segs){await new Promise(r=>{v.onloadedmetadata=r;setTimeout(r,3000)});segs=[[0,isFinite(v.duration)?v.duration:600]]}
+  const N=S.lines.length,total=actBetween(segs,0,1e9);
+  // line start times on the raw recording
+  let starts=[];const useScroll=$('timing').value==='scroll'&&take.marks&&take.marks.filter(x=>x!=null).length>1;
+  if(useScroll){const lag=0.35;for(let i=0;i<N;i++)starts[i]=take.marks[i]==null?null:(i===0?0:take.marks[i]+lag)}
+  else{const w=S.lines.map(l=>l.say.length),tw=w.reduce((a,b)=>a+b,0);let acc=0;for(let i=0;i<N;i++){starts[i]=i===0?0:rawAtActive(segs,acc/tw*total);acc+=w[i]}}
+  const lines=[];for(let i=0;i<N;i++){if(starts[i]==null)continue;const prev=lines[lines.length-1];const st=prev?Math.max(starts[i],prev.st):starts[i];lines.push({i,l:S.lines[i],st})}
+  lines.forEach((o,k)=>{o.en=lines[k+1]?lines[k+1].st:1e9;o.a0=actBetween(segs,0,o.st);o.dur=actBetween(segs,o.st,o.en);o.caps=capChunks(o.l.say,Math.max(o.dur,0.5))});
+  const srt=[];let n=1;lines.forEach(o=>o.caps.forEach(c=>{if(c.t<o.dur)srt.push(`${n++}\n${srtTime(o.a0+c.t)} --> ${srtTime(o.a0+Math.min(c.end,o.dur))}\n${c.text}\n`)}));
+  closeSheets();document.body.classList.add('editing');
+  const cv=$('cv'),ctx=cv.getContext('2d'),dest=A.createMediaStreamDestination();
   let music=null;const mf=$('music').files[0];
   if(mf){music=new Audio(URL.createObjectURL(mf));music.loop=true;const ms=A.createMediaElementSource(music),mg=A.createGain();mg.gain.value=+$('mvol').value;ms.connect(mg);mg.connect(dest)}
   const out=new MediaStream([...cv.captureStream(30).getVideoTracks(),...dest.stream.getAudioTracks()]);
-  const mime=pickMime();const R=new MediaRecorder(out,mime?{mimeType:mime,videoBitsPerSecond:10e6}:{});const parts=[];R.ondataavailable=e=>e.data.size&&parts.push(e.data);
+  const mime=pickMime(),R=new MediaRecorder(out,mime?{mimeType:mime,videoBitsPerSecond:10e6}:{}),parts=[];R.ondataavailable=e=>e.data.size&&parts.push(e.data);
   const resume=()=>{if(R.state==='inactive')R.start(250);else if(R.state==='paused')R.resume();if(music&&music.paused)music.play().catch(()=>{})};
   const pause=()=>{if(R.state==='recording')R.pause();if(music)music.pause()};
-  let gOff=0,srt=[],n=1;
-  for(let i=0;i<list.length;i++){
-    const o=list[i];$('rstat').textContent=`Editing line ${i+1} of ${list.length}…`;$('prog').firstChild.style.width=(i/list.length*100)+'%';$('edprog').textContent=`Editing ${i+1}/${list.length}`;
-    const v=document.createElement('video');v.playsInline=true;v.setAttribute('playsinline','');v.preload='auto';v.src=URL.createObjectURL(o.t.blob);
-    v.style.cssText='position:fixed;width:2px;height:2px;opacity:0;pointer-events:none;left:0;top:0';document.body.appendChild(v);
-    const src=A.createMediaElementSource(v),g=A.createGain();g.gain.value=0;src.connect(g);g.connect(dest);
-    let segs=o.segs;if(!segs){const d=isFinite(v.duration)?v.duration:30;segs=[[0,d]]}
-    const act=segs.reduce((a,[x,y])=>a+(y-x),0),caps=capChunks(o.l.say,act);
-    caps.forEach(c=>srt.push(`${n++}\n${srtTime(gOff+c.t)} --> ${srtTime(gOff+c.end)}\n${c.text}\n`));
-    await new Promise(done=>{
-      let k=0,fin=false;const end=()=>{if(fin)return;fin=true;pause();g.gain.value=0;v.pause();src.disconnect();v.remove();done()};
-      v.onended=end;v.onerror=end;v.playbackRate=4;v.play().catch(end);
-      const tick=()=>{if(fin)return;const t=v.currentTime;
-        while(k<segs.length&&t>=segs[k][1]){k++;pause();g.gain.value=0;v.playbackRate=4}
-        if(k>=segs.length){end();return}
-        if(t>=segs[k][0]&&v.videoWidth){if(v.playbackRate!==1)v.playbackRate=1;g.gain.value=1;resume();
-          let lt=t-segs[k][0];for(let q=0;q<k;q++)lt+=segs[q][1]-segs[q][0];
-          ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);drawCover(ctx,v);
-          let below=330;const a=Math.min(1,lt/0.15);
-          if(o.l.card&&$('cards').checked)below=drawCard(ctx,o.l.card,a)+40;
-          if(o.l.head)drawHead(ctx,o.l.head,o.l.card&&$('cards').checked?below+60:600);
-          if($('caps').checked){const c=caps.find(c=>lt>=c.t&&lt<c.end)||caps[caps.length-1];if(c)drawCap(ctx,c.text)}
-        }
-        requestAnimationFrame(tick)};
-      requestAnimationFrame(tick);
-    });
-    gOff+=act;
-  }
-  const blob=await new Promise(r=>{R.onstop=()=>r(new Blob(parts,{type:R.mimeType||'video/webm'}));if(R.state!=='inactive')R.stop();else r(new Blob(parts))});
+  const src=A.createMediaElementSource(v),g=A.createGain();g.gain.value=0;src.connect(g);g.connect(dest);
+  await new Promise(done=>{
+    let k=0,fin=false;const end=()=>{if(fin)return;fin=true;pause();g.gain.value=0;v.pause();src.disconnect();v.remove();done()};
+    v.onended=end;v.onerror=end;v.playbackRate=4;v.play().catch(end);
+    const tick=()=>{if(fin)return;const t=v.currentTime;
+      while(k<segs.length&&t>=segs[k][1]){k++;pause();g.gain.value=0;v.playbackRate=4}
+      if(k>=segs.length){end();return}
+      if(t>=segs[k][0]&&v.videoWidth){if(v.playbackRate!==1)v.playbackRate=1;g.gain.value=1;resume();
+        const o=lines.filter(o=>o.st<=t).pop()||lines[0];const lt=actBetween(segs,o.st,t);
+        const done=actBetween(segs,0,t);$('prog').firstChild.style.width=(done/total*100)+'%';$('edprog').textContent=`Editing ${fmt(done)} / ${fmt(total)}`;
+        ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);drawCover(ctx,v);
+        let below=330;const a=Math.min(1,lt/0.15),cards=$('cards').checked;
+        if(o.l.card&&cards)below=drawCard(ctx,o.l.card,a)+40;
+        if(o.l.head)drawHead(ctx,o.l.head,o.l.card&&cards?below+60:600);
+        if($('caps').checked&&lt<o.dur+0.05){const c=o.caps.find(c=>lt>=c.t&&lt<c.end)||o.caps[o.caps.length-1];if(c)drawCap(ctx,c.text)}
+      }
+      requestAnimationFrame(tick)};
+    requestAnimationFrame(tick);
+  });
+  const blob=await new Promise(r=>{R.onstop=()=>r(new Blob(parts,{type:R.mimeType||'video/mp4'}));if(R.state!=='inactive')R.stop();else r(new Blob(parts))});
   $('prog').firstChild.style.width='100%';
   const ext=(R.mimeType||'').includes('mp4')?'mp4':'webm',url=URL.createObjectURL(blob),surl=URL.createObjectURL(new Blob([srt.join('\n')],{type:'text/plain'}));
-  const miss=S.lines.length-list.length;
   $('out').innerHTML=`<video controls playsinline src="${url}"></video>
    <p class="row"><button id="share" type="button" class="btn pri">Save to Photos / Share</button></p>
-   <p class="row"><a class="btn" href="${url}" download="resumeforge-${S.id}-edited.${ext}">Download video (.${ext})</a></p>
-   <p class="row"><a class="btn" href="${surl}" download="resumeforge-${S.id}.srt">Download captions (.srt)</a></p>`+
-   (ext==='webm'?'<p class="hint">Your browser saved WebM. Instagram and TikTok want MP4: update Chrome, or send me the file and I will convert it.</p>':'')+
-   (miss?`<p class="hint">${miss} line(s) not recorded yet, so they were left out.</p>`:'');
+   <p class="row"><a class="btn" href="${url}" download="resumeforge-${S.id}-edited.${ext}">Download video (.${ext})</a><a class="btn" href="${surl}" download="resumeforge-${S.id}.srt">Captions (.srt)</a></p>`+
+   (useScroll?'':'<p class="hint">Lines were timed by text length.</p>')+
+   (lines.length<N?`<p class="hint">You stopped before the end, so ${N-lines.length} line(s) were left out.</p>`:'');
   const file=new File([blob],`resumeforge-${S.id}-edited.${ext}`,{type:blob.type||'video/mp4'});
-  $('share').onclick=async()=>{try{if(navigator.canShare&&navigator.canShare({files:[file]}))await navigator.share({files:[file]});else $('rstat').textContent='Sharing not supported here: use the Download button.'}catch(e){}};
-  $('rstat').textContent=`Done · ${gOff.toFixed(1)}s after cutting pauses`;
+  $('share').onclick=async()=>{try{if(navigator.canShare&&navigator.canShare({files:[file]}))await navigator.share({files:[file]});else $('rstat').textContent='Sharing not supported here: use Download.'}catch(e){}};
+  $('rstat').textContent=`Done · ${fmt(total)} after cutting pauses`;
   document.body.classList.remove('editing');openSheet('shEdit');
   rendering=false;$('render').disabled=false;
 }
@@ -458,10 +486,12 @@ function openSheet(id){closeSheets();$(id).classList.add('open');$('scrim').clas
 $('scrim').onclick=closeSheets;
 document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openSheet(b.dataset.open));
 document.querySelectorAll('.sheet .x').forEach(b=>b.onclick=closeSheets);
-$('restart').onclick=startCam;
+addEventListener('resize',sizePads);
+
 /* ---------- boot ---------- */
 applySet();
-(async()=>{db=await idb();await dbLoad();renderLists();startCam()})();
+(async()=>{db=await idb();await dbLoad();renderLists();startCam();requestAnimationFrame(loop)})();
+
 }
 </script>
 </body>
