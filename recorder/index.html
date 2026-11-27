@@ -61,7 +61,7 @@ body.recording .tools,body.recording #flip{visibility:hidden}
 #startOv{position:fixed;inset:0;z-index:25;display:grid;place-items:center;background:#000;padding:30px;text-align:center}
 #startOv p{color:var(--mute);max-width:300px}
 .big{font:700 17px Inter;color:#000;background:#fff;border:0;border-radius:26px;padding:14px 26px}
-#msg{display:none;position:fixed;z-index:26;left:16px;right:16px;bottom:calc(var(--sb) + 150px);background:#3a1414;border-radius:12px;padding:12px;font-size:14px}
+#msg{display:none;position:fixed;z-index:26;left:16px;right:16px;top:calc(var(--st) + 52px + 42dvh);background:#1c1c1ef0;border-radius:12px;padding:10px 12px;font-size:14px;align-items:center;gap:10px;justify-content:space-between}#msg button{border:0;background:#fff;color:#000;font:700 14px Inter;border-radius:14px;padding:7px 14px;flex:none}
 #scrim{position:fixed;inset:0;z-index:49;background:#0007;opacity:0;pointer-events:none;transition:opacity .2s}
 #scrim.on{opacity:1;pointer-events:auto}
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:50;max-height:82dvh;overflow:auto;background:var(--sheet);border-radius:16px 16px 0 0;padding:10px 18px calc(var(--sb) + 20px);transform:translateY(105%);transition:transform .25s ease}
@@ -152,9 +152,10 @@ body.editing #edprog{display:block}
   <div id="scripts"></div>
   <div class="row">
     <button class="btn" id="play" disabled>Play take</button>
+    <button class="btn" id="del" disabled>Delete take</button>
     <label class="btn">Upload take<input type="file" id="upl" accept="video/*" hidden></label>
   </div>
-  <p class="hint">Recording again replaces the take for that script.</p>
+  <p class="hint">Just tap record to redo a script. The old take is replaced, and you get an Undo button for a few seconds.</p>
 </div>
 
 <div class="sheet" id="shSet">
@@ -241,7 +242,11 @@ const takes={}; // script id -> {blob, marks}
 let facing='user',counting=false,cur=0,stream=null,rec=null,chunks=[],recT0=0,recTimer=null,ac=null;
 let scrollPos=0,scrolling=false,lastTs=0,marks=[];
 const SID=()=>SCRIPTS[cur].id;
-const msg=t=>{const m=$('msg');m.textContent=t;m.style.display=t?'block':'none';if(t)setTimeout(()=>{if(m.textContent===t)m.style.display='none'},7000)};
+let msgT=null;
+const msg=(t,act)=>{const m=$('msg');clearTimeout(msgT);if(!t){m.style.display='none';return}
+  m.innerHTML='<span></span>'+(act?'<button type="button">'+esc(act.label)+'</button>':'');m.firstChild.textContent=t;m.style.display='flex';
+  if(act)m.querySelector('button').onclick=e=>{e.stopPropagation();m.style.display='none';act.fn()};
+  msgT=setTimeout(()=>m.style.display='none',act?8000:3500)};
 const getAC=()=>ac||(ac=new (window.AudioContext||window.webkitAudioContext)());
 const pickMime=()=>['video/mp4;codecs=avc1,mp4a.40.2','video/mp4;codecs=avc1','video/mp4','video/webm;codecs=vp9,opus','video/webm'].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m))||'';
 const fmt=t=>Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
@@ -298,7 +303,7 @@ $('tp').addEventListener('click',()=>{scrolling=!scrolling;lastTs=0;setPauseUI()
 function renderLists(){
   $('scripts').innerHTML=SCRIPTS.map((s,i)=>`<button class="sc ${i===cur?'on':''}" data-s="${i}"><b>${esc(s.name)}</b><small>${esc(s.day)} · ${takes[s.id]?'recorded':'not recorded'}</small></button>`).join('');
   $('scriptSel').innerHTML=SCRIPTS.map((s,i)=>`<option value="${i}" ${i===cur?'selected':''}>${esc(s.name.replace(/^Script (\d) · /,'S$1 · '))}${takes[s.id]?' ✓':''}</option>`).join('');
-  $('play').disabled=!takes[SID()];
+  $('play').disabled=$('del').disabled=!takes[SID()];
   renderTP();
 }
 $('scripts').addEventListener('click',e=>{const b=e.target.closest('.sc');if(!b||rec)return;cur=+b.dataset.s;renderLists();closeSheets()});
@@ -329,8 +334,7 @@ function countdown(){return new Promise(res=>{if(!$('cdOn').checked)return res()
 async function toggleRec(){
   if(!stream||counting)return;
   if(rec){rec.stop();return}
-  if(takes[SID()]&&!$('rec').dataset.ok){$('rec').dataset.ok='1';msg('This script already has a take. Tap record again to replace it.');setTimeout(()=>delete $('rec').dataset.ok,6000);return}
-  delete $('rec').dataset.ok;
+  msg('');const prevTake=takes[SID()],sid=SID();
   scrolling=false;scrollPos=0;$('tp').scrollTop=0;highlight();
   counting=true;await countdown();counting=false;
   chunks=[];marks=[];const mime=pickMime();
@@ -338,9 +342,11 @@ async function toggleRec(){
   rec.ondataavailable=e=>e.data.size&&chunks.push(e.data);
   rec.onstop=()=>{
     const blob=new Blob(chunks,{type:rec.mimeType||'video/mp4'});
-    takes[SID()]={blob,marks:marks.slice(),at:Date.now()};dbPut(SID(),takes[SID()]);rec=null;scrolling=false;
+    takes[sid]={blob,marks:marks.slice(),at:Date.now()};dbPut(sid,takes[sid]);rec=null;scrolling=false;
     document.body.classList.remove('recording','paused');clearInterval(recTimer);$('rec').classList.remove('live');
-    renderLists();msg('Saved. Open Edit & export, or record again to replace it.');
+    renderLists();
+    if(prevTake)msg('Saved. Your old take was replaced.',{label:'Undo',fn:()=>{takes[sid]=prevTake;dbPut(sid,prevTake);renderLists();msg('Old take restored.')}});
+    else msg('Saved. Tap Edit & export when ready.');
   };
   rec.start(500);recT0=performance.now();marks[0]=0;
   document.body.classList.add('recording');$('rec').classList.add('live');
@@ -357,6 +363,7 @@ document.addEventListener('keydown',e=>{
 });
 $('play').onclick=()=>{const t=takes[SID()];if(!t)return;const p=$('playback');p.src=URL.createObjectURL(t.blob);p.style.display='block';p.controls=true;p.play();closeSheets();$('closePb').style.display='block';
   p.onended=()=>{p.style.display='none';$('closePb').style.display='none'}};
+$('del').onclick=()=>{const sid=SID(),old=takes[sid];if(!old)return;delete takes[sid];try{db&&db.transaction('takes','readwrite').objectStore('takes').delete(sid)}catch(e){}renderLists();closeSheets();msg('Take deleted.',{label:'Undo',fn:()=>{takes[sid]=old;dbPut(sid,old);renderLists()}})};
 $('closePb').onclick=()=>{const p=$('playback');p.pause();p.style.display='none';$('closePb').style.display='none'};
 $('upl').onchange=e=>{const f=e.target.files[0];if(!f)return;takes[SID()]={blob:f,marks:[],at:Date.now()};dbPut(SID(),takes[SID()]);e.target.value='';renderLists();msg('Video added. Lines will be timed by text length.')};
 /* ---------- edit: silence analysis ---------- */
@@ -484,6 +491,7 @@ $('render').onclick=renderScript;
 function closeSheets(){document.querySelectorAll('.sheet').forEach(x=>x.classList.remove('open'));$('scrim').classList.remove('on')}
 function openSheet(id){closeSheets();$(id).classList.add('open');$('scrim').classList.add('on')}
 $('scrim').onclick=closeSheets;
+$('msg').onclick=()=>msg('');
 document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openSheet(b.dataset.open));
 document.querySelectorAll('.sheet .x').forEach(b=>b.onclick=closeSheets);
 addEventListener('resize',sizePads);
