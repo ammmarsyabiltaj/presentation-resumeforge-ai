@@ -527,7 +527,7 @@ async function renderScript(){
 /* ---------- edit: frame-accurate export (WebCodecs) ---------- */
 const canFast=()=>typeof VideoEncoder!=='undefined'&&typeof AudioEncoder!=='undefined'&&typeof VideoFrame!=='undefined'&&typeof AudioData!=='undefined'&&window.Mp4Muxer&&'requestVideoFrameCallback' in HTMLVideoElement.prototype;
 async function pickVideoCfg(){for(const codec of ['avc1.640028','avc1.4d0028','avc1.640033','avc1.42e028']){const c={codec,width:W,height:H,bitrate:10e6,framerate:30,avc:{format:'annexb'}};try{const r=await VideoEncoder.isConfigSupported(c);if(r.supported)return c}catch(e){}}return null}
-async function pickAudioCfg(sr){for(const codec of ['mp4a.40.2','opus'])for(const sampleRate of [sr,48000,44100]){const c={codec,sampleRate,numberOfChannels:1,bitrate:128000};try{const r=await AudioEncoder.isConfigSupported(c);if(r.supported)return c}catch(e){}}return null}
+async function pickAudioCfg(sr){for(const codec of ['mp4a.40.2','opus'])for(const sampleRate of [sr,48000,44100]){const c={codec,sampleRate,numberOfChannels:1,bitrate:128000};if(codec!=='opus')c.aac={format:'aac'};try{const r=await AudioEncoder.isConfigSupported(c);if(r.supported)return c}catch(e){}}return null}
 function splitAnnexB(b){const out=[];let i=0,st=-1;while(i+3<=b.length){let sc=0;if(b[i]===0&&b[i+1]===0&&b[i+2]===1)sc=3;else if(b[i]===0&&b[i+1]===0&&b[i+2]===0&&b[i+3]===1)sc=4;
   if(sc){if(st>=0)out.push(b.subarray(st,i));i+=sc;st=i}else i++}if(st>=0)out.push(b.subarray(st));return out.filter(n=>n.length)}
 function lenPrefix(nals){const len=nals.reduce((a,n)=>a+4+n.length,0),o=new Uint8Array(len);let p=0;for(const n of nals){o[p]=n.length>>>24;o[p+1]=n.length>>>16&255;o[p+2]=n.length>>>8&255;o[p+3]=n.length&255;o.set(n,p+4);p+=4+n.length}return o}
@@ -569,7 +569,13 @@ async function renderFast(){
         else meta={decoderConfig:{codec:vcfg.codec,codedWidth:W,codedHeight:H,description:avcC(sps,pps),colorSpace:CS}};vcfgSent=true}
       const body=nals.length?lenPrefix(nals.filter(n=>{const t=n[0]&31;return t!==7&&t!==8&&t!==9})):raw;
       mux.addVideoChunkRaw(body,c.type,c.timestamp,c.duration||33333,meta)}catch(e){encErr=e}},error:e=>encErr=e});venc.configure(vcfg);
-    const aenc=new AudioEncoder({output:(c,m)=>mux.addAudioChunk(c,m),error:e=>encErr=e});aenc.configure(acfg);
+    let aChunks=0,aBytes=0;
+    const aenc=new AudioEncoder({output:(c,m)=>{try{
+      let d=new Uint8Array(c.byteLength);c.copyTo(d);
+      if(d.length>7&&d[0]===0xFF&&(d[1]&0xF0)===0xF0){const hl=(d[1]&1)?7:9;d=d.subarray(hl)} // strip ADTS header if Safari adds one
+      const desc=m&&m.decoderConfig&&m.decoderConfig.description;
+      const meta=desc&&desc.byteLength?{decoderConfig:{codec:acfg.codec,sampleRate:acfg.sampleRate,numberOfChannels:1,description:desc}}:undefined;
+      mux.addAudioChunkRaw(d,c.type,c.timestamp,c.duration||Math.round(1024/acfg.sampleRate*1e6),meta);aChunks++;aBytes+=d.length}catch(e){encErr=e}},error:e=>encErr=e});aenc.configure(acfg);
     closeSheets();document.body.classList.add('editing');
     const cv=$('cv'),ctx=cv.getContext('2d');
     // audio: keep only the speech parts, with tiny fades so cuts don't click
@@ -578,6 +584,8 @@ async function renderFast(){
       for(let i=a;i<b&&w<outLen;i++,w++){let g=1;if(i-a<fl)g=(i-a)/fl;else if(b-i<fl)g=(b-i)/fl;pcm[w]=ch[i]*g}}
     const mf=$('music').files[0];
     if(mf){try{const mb=await A.decodeAudioData(await mf.arrayBuffer());const m=resample(mb.getChannelData(0),mb.sampleRate,sr),mv=+$('mvol').value;for(let i=0;i<outLen;i++)pcm[i]+=m[i%m.length]*mv}catch(e){}}
+    let peak=0;for(let i=0;i<ch.length;i+=50)peak=Math.max(peak,Math.abs(ch[i]));
+    if(peak<0.002)throw new Error('the recording has no sound in it. Check the microphone in Settings and record again');
     const apcm=resample(pcm,sr,acfg.sampleRate),asr=acfg.sampleRate;
     for(let i=0;i<apcm.length;i+=1024){const part=apcm.subarray(i,Math.min(i+1024,apcm.length));
       const ad=new AudioData({format:'f32-planar',sampleRate:asr,numberOfFrames:part.length,numberOfChannels:1,timestamp:Math.round(i/asr*1e6),data:part.slice()});aenc.encode(ad);ad.close()}
@@ -611,6 +619,8 @@ async function renderFast(){
     $('edprog').textContent='Saving…';
     await venc.flush();await aenc.flush();if(encErr)throw encErr;mux.finalize();
     const blob=new Blob([target.buffer],{type:'video/mp4'});
+    let outPeak=-1;try{const ob=await A.decodeAudioData(target.buffer.slice(0));const od=ob.getChannelData(0);outPeak=0;for(let i=0;i<od.length;i+=50)outPeak=Math.max(outPeak,Math.abs(od[i]))}catch(e){}
+    if(outPeak>=0&&outPeak<0.002){$('rstat').dataset.diag=`no sound after export · ${acfg.codec} ${asr}Hz · ${aChunks} chunks · ${aBytes} bytes`}else delete $('rstat').dataset.diag;
     showResult(blob,'mp4',srt,S,useScroll,lines.length<N?N-lines.length:0,total);
   }catch(err){
     v.remove();document.body.classList.remove('editing');rendering=false;$('render').disabled=false;
@@ -628,7 +638,7 @@ function showResult(blob,ext,srt,S,useScroll,miss,total){
    (useScroll?'':'<p class="hint">Lines were timed by text length.</p>')+(miss?`<p class="hint">You stopped before the end, so ${miss} line(s) were left out.</p>`:'');
   const file=new File([blob],`resumeforge-ai-${S.id}.${ext}`,{type:'video/mp4'});
   $('share').onclick=async()=>{try{if(navigator.canShare&&navigator.canShare({files:[file]}))await navigator.share({files:[file]});else $('rstat').textContent='Sharing not supported here: use Download.'}catch(e){}};
-  $('rstat').textContent=`Done · ${fmt(total)} after cutting pauses`;
+  $('rstat').textContent=`Done · ${fmt(total)} after cutting pauses`+($('rstat').dataset.diag?` · Problem: ${$('rstat').dataset.diag}. Send Claude a screenshot of this.`:'');
 }
 
 $('render').onclick=()=>canFast()?renderFast():renderScript();
